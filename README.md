@@ -21,7 +21,7 @@ _MyStore.js_
 let {Storux, Store} = require('storux');
 let storux = new Storux();
 
-class MyStore extend Store {
+class MyStore extends Store {
   constructor(storux, opt) {
     super(storux, opt);
 
