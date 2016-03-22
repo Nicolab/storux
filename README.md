@@ -66,8 +66,8 @@ module.exports = storux.createStore(MyStore);
 #### Storux Lifecycle
 ##### createStore
 ##### createStore.<store name>
-##### beforeAction.<action name>
-##### afterAction.<action name>
+##### beforeActions
+##### afterActions
 
 #### Store Lifecycle
 

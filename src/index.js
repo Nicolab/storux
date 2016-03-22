@@ -85,14 +85,14 @@ class Storux {
     this._actionHandlerListenersMap = new WeakMap();
   }
 
-  beforeAction(action, listener, thisScope) {
-    this.lifecycle.on('beforeAction.' + action.displayName, listener, thisScope);
+  beforeActions(listener, thisScope) {
+    this.lifecycle.on('beforeActions', listener, thisScope);
 
     return this;
   }
 
-  afterAction(action, listener, thisScope) {
-    this.lifecycle.on('afterAction.' + action.displayName, listener, thisScope);
+  afterActions(listener, thisScope) {
+    this.lifecycle.on('afterActions', listener, thisScope);
 
     return this;
   }

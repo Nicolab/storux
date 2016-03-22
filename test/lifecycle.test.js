@@ -27,11 +27,11 @@ describe.skip('Lifecycle', function() {
 
     });
 
-    it('beforeAction', function() {
+    it('beforeActions', function() {
 
     });
 
-    it('afterAction', function() {
+    it('afterActions', function() {
 
     });
   });

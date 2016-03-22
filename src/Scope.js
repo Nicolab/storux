@@ -284,9 +284,11 @@ class Scope {
                 'beforeAction.' + action.displayName, payload
               );
 
-              this.storux.lifecycle.emit(
-                'beforeAction.' + action.displayName, payload
-              );
+              this.storux.lifecycle.emit('beforeActions', {
+                actionId: action.id,
+                actionName: action.displayName,
+                payload
+              });
 
               return this._dispatchAction({action, payload})
                 .then((hasChanged) => {
@@ -302,12 +304,13 @@ class Scope {
                     hasChanged
                   );
 
-                  this.storux.lifecycle.emit(
-                    'afterAction.' + action.displayName,
+                  this.storux.lifecycle.emit('afterActions', {
+                    actionId: action.id,
+                    actionName: action.displayName,
+                    result: fnResult,
                     payload,
-                    fnResult,
                     hasChanged
-                  );
+                  });
 
                   this._next();
 
