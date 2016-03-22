@@ -98,8 +98,8 @@ class ExternalStore extends Store {
     );
   }
 
-  handleVirtual2(payload, hasChanged) {
-    handleVirtual2Spy(payload, hasChanged);
+  handleVirtual2(payload, result, hasChanged) {
+    handleVirtual2Spy(payload, result, hasChanged);
     this.scope.setState({'b': 'changed'});
   }
 }
@@ -340,7 +340,6 @@ describe('Actions', function() {
 
     it('listen (from store) an external action (virtual) to an action listener'
     + ' and update the states of the two store', function(done) {
-      let thenDoneSpy = test.spy();
       let externalStore = storux.createStore(ExternalStore);
 
       sharedStore
@@ -350,35 +349,38 @@ describe('Actions', function() {
             .object(payload)
               .is({a: false, b: true, c: false})
 
-            // handleVirtual2() called with: {a, b, c} (first argument)
-            .object(handleVirtual2Spy.firstCall.args[0])
-              .is(payload)
+            .wait(0, function() {
+              test
+                // handleVirtual2() called with payload: {a, b, c} (argument 1)
+                .object(handleVirtual2Spy.firstCall.args[0])
+                  .is(payload)
 
-            // handleVirtual2() called with: hasChanged (second argument)
-            .bool(handleVirtual2Spy.firstCall.args[1])
-              .isTrue()
+                // handleVirtual2() called with action result: {a, b, c} (argument 2)
+                .object(handleVirtual2Spy.firstCall.args[1])
+                  .is(payload)
 
-            .object(sharedStore.getState())
-              .is({a: 'changed'})
+                // handleVirtual2() called with: hasChanged (argument 3)
+                .bool(handleVirtual2Spy.firstCall.args[2])
+                  .isTrue()
 
-            .object(externalStore.getState())
-              .is({b: 'changed'})
+                .object(sharedStore.getState())
+                  .is({a: 'changed'})
+
+                .object(externalStore.getState())
+                  .is({b: 'changed'})
+              ;
+            })
           ;
 
-          thenDoneSpy();
+          assert(handleVirtual2Spy.calledOnce, 'handleVirtual2() was called once');
+          assert(onVirtual2Spy.calledOnce, 'onVirtual2() was called once');
+          assert(onVirtual1Spy.calledOnce, 'onVirtual1() was always called once');
+          assert(privateOnVirtual1Spy.calledOnce, '_onVirtual1() was always called once');
+
+          done();
         })
         .catch((err) => catchError(err))
       ;
-
-      test.wait(0, function() {
-        assert(thenDoneSpy.calledOnce, 'resolve action virtual2()');
-        assert(handleVirtual2Spy.calledOnce, 'handleVirtual2() was called once');
-        assert(onVirtual2Spy.calledOnce, 'onVirtual2() was called once');
-        assert(onVirtual1Spy.calledOnce, 'onVirtual1() was always called once');
-        assert(privateOnVirtual1Spy.calledOnce, '_onVirtual1() was always called once');
-        thenDoneSpy.reset();
-        done();
-      });
     });
   });
 });

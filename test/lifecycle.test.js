@@ -26,6 +26,14 @@ describe.skip('Lifecycle', function() {
     it('createStore.<store name>', function() {
 
     });
+
+    it('beforeAction', function() {
+
+    });
+
+    it('afterAction', function() {
+
+    });
   });
 
   describe('Store lifecycle', function() {

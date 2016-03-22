@@ -85,6 +85,18 @@ class Storux {
     this._actionHandlerListenersMap = new WeakMap();
   }
 
+  beforeAction(action, listener, thisScope) {
+    this.lifecycle.on('beforeAction.' + action.displayName, listener, thisScope);
+
+    return this;
+  }
+
+  afterAction(action, listener, thisScope) {
+    this.lifecycle.on('afterAction.' + action.displayName, listener, thisScope);
+
+    return this;
+  }
+
   /**
    * Create a new `Store` instance.
    *

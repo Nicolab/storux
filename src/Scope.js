@@ -284,6 +284,10 @@ class Scope {
                 'beforeAction.' + action.displayName, payload
               );
 
+              this.storux.lifecycle.emit(
+                'beforeAction.' + action.displayName, payload
+              );
+
               return this._dispatchAction({action, payload})
                 .then((hasChanged) => {
                   resolve(fnResult);
@@ -294,6 +298,14 @@ class Scope {
                   this.lifecycle.emit(
                     'afterAction.' + action.displayName,
                     payload,
+                    fnResult,
+                    hasChanged
+                  );
+
+                  this.storux.lifecycle.emit(
+                    'afterAction.' + action.displayName,
+                    payload,
+                    fnResult,
                     hasChanged
                   );
 
