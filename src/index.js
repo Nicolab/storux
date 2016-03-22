@@ -26,6 +26,19 @@ if (!WeakMap) {
 }
 
 class Storux {
+  static notActions = [
+    // prefixes: handlers
+    'on',
+    'handle',
+    // prefix: private and magic methods
+    '_',
+    // methods
+    'constructor',
+    'getState',
+    'getPrevState',
+    'setState'
+  ];
+
   /**
    * Check if `value` is an instance of `Store`.
    *
@@ -44,7 +57,7 @@ class Storux {
    */
   static mountActionsResolver(store) {
     let props = getStoreProtoProps(store).concat(Object.keys(store));
-    let notActions = Storux.notActions;
+    let notActions = store.scope.opt.notActions;
 
     for (let prop of props) {
       if (typeof store[prop] === 'function'
@@ -55,19 +68,6 @@ class Storux {
       }
     }
   };
-
-  static notActions = [
-    // prefixes: handlers
-    'on',
-    'handle',
-    // prefix: private and magic methods
-    '_',
-    // methods
-    'constructor',
-    'getState',
-    'getPrevState',
-    'setState'
-  ];
 
   static removeScopePropsAfterCreation = [
     'generateActions',
@@ -83,6 +83,18 @@ class Storux {
     this.lifecycle = new Evemit();
     this._actionHandlersMap = new WeakMap();
     this._actionHandlerListenersMap = new WeakMap();
+  }
+
+  beforeAction(action, listener, thisScope) {
+    this.lifecycle.on('beforeAction.' + action.displayName, listener, thisScope);
+
+    return this;
+  }
+
+  afterAction(action, listener, thisScope) {
+    this.lifecycle.on('afterAction.' + action.displayName, listener, thisScope);
+
+    return this;
   }
 
   beforeActions(listener, thisScope) {
@@ -111,8 +123,16 @@ class Storux {
   createStore(StoruxStore, opt = {}) {
     let storeName, store;
 
-    opt.mountActionsResolver = Storux.mountActionsResolver;
-    store = new StoruxStore(this, opt);
+    if (!opt.mountActionsResolver) {
+      opt.mountActionsResolver = Storux.mountActionsResolver;
+    }
+
+    if (!opt.notActions) {
+      opt.notActions = Storux.notActions.slice();
+    }
+
+    opt.storux = this;
+    store = new StoruxStore(opt);
 
     if (!isStore(store)) {
       throw new TypeError(

@@ -19,8 +19,8 @@ let assert = test.assert;
 let {catchError} = require('./fixtures/helpers');
 
 class SharedStore extends Store {
-  constructor(storux, opt) {
-    super(storux, opt);
+  constructor(opt) {
+    super(opt);
 
     this
       .scope

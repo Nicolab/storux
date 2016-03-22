@@ -27,6 +27,14 @@ describe.skip('Lifecycle', function() {
 
     });
 
+    it('beforeAction', function() {
+
+    });
+
+    it('afterAction', function() {
+
+    });
+
     it('beforeActions', function() {
 
     });

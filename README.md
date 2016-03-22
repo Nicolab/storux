@@ -22,8 +22,8 @@ let {Storux, Store} = require('storux');
 let storux = new Storux();
 
 class MyStore extends Store {
-  constructor(storux, opt) {
-    super(storux, opt);
+  constructor(opt) {
+    super(opt);
 
     this
       .scope
@@ -68,6 +68,8 @@ module.exports = storux.createStore(MyStore);
 ##### createStore.<store name>
 ##### beforeActions
 ##### afterActions
+##### beforeAction.<action name>
+##### afterAction.<action name>
 
 #### Store Lifecycle
 

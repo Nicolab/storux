@@ -23,8 +23,8 @@ let assert = test.assert;
 let {catchError} = require('./fixtures/helpers');
 
 class SharedStore extends Store {
-  constructor(storux, opt) {
-    super(storux, opt);
+  constructor(opt) {
+    super(opt);
 
     this
       .scope
@@ -88,8 +88,8 @@ class SharedStore extends Store {
 }
 
 class ExternalStore extends Store {
-  constructor(storux, opt) {
-    super(storux, opt);
+  constructor(opt) {
+    super(opt);
 
     sharedStore.scope.afterAction(
       sharedStore.virtual2,

@@ -46,8 +46,8 @@ const resetAllSpies = () => {
 describe('Flux', function() {
 
   class FluxStore extends Store {
-    constructor(storux, opt) {
-      super(storux, opt);
+    constructor(opt) {
+      super(opt);
 
       this
         .scope

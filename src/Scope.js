@@ -28,20 +28,23 @@ const _privateMap = new WeakMap();
  * Handle the scope of a `Store` instance.
  */
 class Scope {
+
   /**
    * @constructor
-   * @param  {object}  cfg         Scope config.
-   * @param  {Storux}  cfg.storux  A `Storux` instance.
-   * @param  {Store}   cfg.store   The `Store` instance handled
+   * @param  {object}  cfg             Scope config.
+   * @param  {Store}   cfg.store       The `Store` instance handled
    * by the `Scope` instance.
-   * @param  {object}  cfg.opt     Store options
+   * @param  {object}  cfg.opt         Store options
+   * @param  {Storux}  cfg.opt.storux  A `Storux` instance.
    */
-  constructor({storux, store, opt}) {
+  constructor({store, opt}) {
     let _private;
+
+    this.storux = opt.storux;
+    opt.storux = null;
 
     this.opt = opt;
     this.store = store;
-    this.storux = storux;
     this.actionsStack = [];
     this.changeListeners = [];
     this.lifecycle = new Evemit();
@@ -68,13 +71,13 @@ class Scope {
   }
 
   beforeAction(action, listener, thisScope) {
-    this.lifecycle.on('beforeAction.' + action.displayName, listener, thisScope);
+    this.storux.lifecycle.on('beforeAction.' + action.displayName, listener, thisScope);
 
     return this;
   }
 
   afterAction(action, listener, thisScope) {
-    this.lifecycle.on('afterAction.' + action.displayName, listener, thisScope);
+    this.storux.lifecycle.on('afterAction.' + action.displayName, listener, thisScope);
 
     return this;
   }
@@ -278,18 +281,19 @@ class Scope {
             // shallow copy
             actionArgs = actionArgs.slice();
 
+            this.storux.lifecycle.emit(
+              'beforeAction.' + action.displayName, actionArgs
+            );
+
+            this.storux.lifecycle.emit('beforeActions', {
+              actionId: action.id,
+              actionName: action.displayName,
+              actionArgs
+            });
+
             // first arg: dispatch() called from the method implemented
+            // `payload` to dispatch
             actionArgs.unshift((payload) => {
-              this.lifecycle.emit(
-                'beforeAction.' + action.displayName, payload
-              );
-
-              this.storux.lifecycle.emit('beforeActions', {
-                actionId: action.id,
-                actionName: action.displayName,
-                payload
-              });
-
               return this._dispatchAction({action, payload})
                 .then((hasChanged) => {
                   resolve(fnResult);
@@ -297,7 +301,7 @@ class Scope {
                   _private.actionsQueue--;
                   _private.currentAction = null;
 
-                  this.lifecycle.emit(
+                  this.storux.lifecycle.emit(
                     'afterAction.' + action.displayName,
                     payload,
                     fnResult,
@@ -358,16 +362,16 @@ class Scope {
    * @return {Store}  Current instance.
    */
   mountActions(/*...name, */) {
-     if(arguments.length) {
-       for(let name of arguments) {
-         this.mountAction(name);
-       }
-     } else {
-       // resolve and mount the actions of the store
-       this.opt.mountActionsResolver(this.store);
+   if(arguments.length) {
+     for(let name of arguments) {
+       this.mountAction(name);
      }
+   } else {
+     // resolve and mount the actions of the store
+     this.opt.mountActionsResolver(this.store);
+   }
 
-     return this;
+   return this;
   }
 
   _next() {

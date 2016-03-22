@@ -21,11 +21,10 @@ const Scope = require('./Scope');
  *  * handler of a external action: `handleActionName`
  */
 class Store {
-  constructor(storux, opt = {}) {
+  constructor(opt = {}) {
     let scope = new Scope({
-      storux,
       store: this,
-      opt: opt
+      opt
     });
 
     Object.defineProperty(this, 'scope', {
