@@ -2,6 +2,9 @@
 gulpfile.js
 gulpfile.babel.js
 .jshintrc
+.eslintrc
+.babelrc
+.gitignore
 test/
 src/
 node_modules/

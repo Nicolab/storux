@@ -1,7 +1,7 @@
 'use strict';
 
 let gulp = require('gulp');
-let {cfg, envList} = require('gulp-flow');
+let {cfg, envList, gp} = require('gulp-flow');
 
 
 //----------------------------------------------------------------------------//

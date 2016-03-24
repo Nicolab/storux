@@ -13,6 +13,5 @@ let {cfg} = require('gulp-flow');
 
 require('gulp-flow-js');
 
-cfg.js.jsMin.mangle = true;
-cfg.js.jsMin.mangleProperties = true;
-cfg.js.jsMin.preserveComments = true;
+cfg.js.jsMin.mangle = false;
+cfg.js.jsMin.mangleProperties = false;

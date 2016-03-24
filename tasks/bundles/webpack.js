@@ -29,8 +29,7 @@ cfg.files.srcWatch.push(
 );
 
 cfg.webpack.entry.main = './src/index.js';
-cfg.webpack.output.libraryTarget = 'umd';
-cfg.webpack.output.library = 'storux';
+cfg.webpack.output.libraryTarget = 'commonjs';
 
 cfg.webpack.plugins = [
   new webpack.IgnorePlugin(/_[a-z-A-Z0-9-]\//),

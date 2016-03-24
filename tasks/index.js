@@ -69,8 +69,8 @@ gulp.task('build.js.with-runtime', function() {
   return gulp.src(cfg.webpack.entry.main)
     .pipe(gp.using())
     .pipe(gp.webpack(cfg.webpack))
-    .pipe(gp.rename('storux-with-runtime.js'))
     .pipe(gp.ifElse(envList.NODE_ENV === 'production', pipes.jsMin))
+    .pipe(gp.rename('storux-with-runtime.js'))
     .pipe(gulp.dest(cfg.distDir))
   ;
 });
@@ -84,8 +84,8 @@ gulp.task('build.js', function() {
   return gulp.src(webpackCfg.entry.main)
     .pipe(gp.using())
     .pipe(gp.webpack(webpackCfg))
-    .pipe(gp.rename('storux.js'))
     .pipe(gp.ifElse(envList.NODE_ENV === 'production', pipes.jsMin))
+    .pipe(gp.rename('storux.js'))
     .pipe(gulp.dest(cfg.distDir))
   ;
 });
