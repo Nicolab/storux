@@ -9,9 +9,4 @@
  */
 'use strict';
 
-let {cfg} = require('gulp-flow');
-
 require('gulp-flow-js');
-
-cfg.js.jsMin.mangle = false;
-cfg.js.jsMin.mangleProperties = false;

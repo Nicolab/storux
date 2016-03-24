@@ -1,6 +1,6 @@
 {
   "name": "storux",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "description": "ES6 Flux implementation inspired by Redux and Alt.js.",
   "main": "./dist/storux.js",
   "keywords": [
@@ -32,7 +32,7 @@
     "babel-register": "^6.7.2",
     "gulp": "github:gulpjs/gulp#4.0",
     "gulp-flow": "^1.1.1",
-    "gulp-flow-js": "^1.1.0",
+    "gulp-flow-js": "^1.1.1",
     "gulp-flow-webpack": "^1.1.0",
     "mocha": "^2.4.5",
     "unit.js": ">= 2.0.0 < 3.0.0"
