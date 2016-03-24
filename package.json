@@ -45,6 +45,6 @@
   },
   "scripts": {
     "test": "./test/run.sh",
-    "prepublish": "APP_ENV=prod gulp",
+    "prepublish": "APP_ENV=prod gulp"
   }
 }
