@@ -48,6 +48,13 @@ class Store {
       value: scope.setState.bind(scope)
     });
 
+    Object.defineProperty(this, 'mergeState', {
+      enumerable: false,
+      configurable: false,
+      writable: false,
+      value: scope.mergeState.bind(scope)
+    });
+
     Object.defineProperty(this, 'getPrevState', {
       enumerable: false,
       configurable: false,

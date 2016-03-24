@@ -209,7 +209,7 @@ class Scope {
     let _actionHandlerListeners = _actionHandlerListenersMap.get(actionHandler);
 
     if (!_actionHandlerListeners) {
-      _actionHandlerListeners = actionHandlerListenersMap
+      _actionHandlerListeners = _actionHandlerListenersMap
         .set(actionHandler, [])
         .get(actionHandler)
       ;
@@ -243,6 +243,49 @@ class Scope {
         dispatch(payload);
         return payload;
       };
+    }
+
+    return this;
+  }
+
+  /**
+   * Ensure actions.
+   *
+   * Like `generateActions()` but skip each action already defined.
+   *
+   * @param  {string} ...actionName One or more actions names.
+   * @return {Store}  Current instance.
+   */
+  ensureActions(/*actionName, ...*/) {
+    let store = this.store;
+
+    for(let i = 0, ln = arguments.length; i < ln; i++) {
+      let actionName = arguments[i];
+
+      if(store[actionName]) {
+        continue;
+      }
+
+      // create the action method
+      store[actionName] = function(dispatch, payload) {
+        dispatch(payload);
+        return payload;
+      };
+    }
+
+    return this;
+  }
+
+  /**
+   * Push each action name in `Scope.opt.notActions` array.
+   * This method push '^actionName$'.
+   *
+   * @param  {String}   ...actionName On or more action names.
+   * @return {Scope}  Current instance.
+   */
+  notActions(actionName/*, ...*/) {
+    for (let name of arguments) {
+      this.opt.notActions.push('^' + name.trim() + '$');
     }
 
     return this;

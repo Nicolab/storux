@@ -46,12 +46,12 @@ class Storux {
   static mountActionsResolver(store) {
     let props = getStoreProtoProps(store).concat(Object.keys(store));
     let notActions = store.scope.opt.notActions;
+    let regNotActions = new RegExp(notActions.join('|'));
 
     for (let prop of props) {
       if (typeof store[prop] === 'function'
-      // If such a "notAction" is found,
-      // the every method immediately returns false
-      && notActions.every((notAction) => prop.indexOf(notAction) !== 0)) {
+      && !store[prop].id
+      && !regNotActions.test(prop)) {
         store.scope.mountAction(prop);
       }
     }
@@ -155,15 +155,16 @@ class Storux {
 
 Storux.notActions = [
   // prefixes: handlers
-  'on',
-  'handle',
+  '^on',
+  '^handle',
   // prefix: private and magic methods
-  '_',
+  '^_',
   // methods
-  'constructor',
-  'getState',
-  'getPrevState',
-  'setState'
+  '^constructor$',
+  '^getState$',
+  '^getPrevState$',
+  '^setState$',
+  '^mergeState$'
 ];
 
 Storux.removeScopePropsAfterCreation = [
