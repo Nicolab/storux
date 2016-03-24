@@ -1,6 +1,6 @@
 {
   "name": "storux",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "ES6 Flux implementation inspired by Redux and Alt.js.",
   "main": "./dist/storux.js",
   "keywords": [
@@ -45,6 +45,8 @@
   },
   "scripts": {
     "test": "./test/run.sh",
-    "prepublish": "APP_ENV=prod node --es_staging --harmony_destructuring `which gulp`"
+    "build": "./tasks/build.sh",
+    "git-dist": "git add dist && git commit dist -m \"[dist] v\"$npm_package_version",
+    "prepublish": "npm run-script build && npm run-script git-dist && git push -u origin master"
   }
 }
