@@ -1,6 +1,6 @@
 {
   "name": "storux",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "ES6 Flux implementation inspired by Redux and Alt.js.",
   "main": "./dist/storux.js",
   "keywords": [
@@ -45,6 +45,6 @@
   },
   "scripts": {
     "test": "./test/run.sh",
-    "prepublish": "APP_ENV=prod gulp"
+    "prepublish": "APP_ENV=prod node --es_staging --harmony_destructuring `which gulp`"
   }
 }
