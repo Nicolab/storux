@@ -3,6 +3,7 @@ gulpfile.js
 gulpfile.babel.js
 .jshintrc
 test/
+src/
 node_modules/
 local/
 public/

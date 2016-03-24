@@ -51,16 +51,16 @@ require('./bundles/webpack');
 \*----------------------------------------------------------------------------*/
 
 // generic tasks
-gulp.task('clean.public', function() {
-  return utils.del(cfg.publicDir);
+gulp.task('clean.dist', function() {
+  return utils.del(cfg.distDir);
 });
 
 // build: files
 gulp.task('build.files', function() {
   return gulp.src(cfg.files.src)
-    .pipe(gp.newer(cfg.publicDir))
+    .pipe(gp.newer(cfg.distDir))
     .pipe(gp.using())
-    .pipe(gulp.dest(cfg.publicDir))
+    .pipe(gulp.dest(cfg.distDir))
   ;
 });
 
@@ -71,7 +71,7 @@ gulp.task('build.js.with-runtime', function() {
     .pipe(gp.webpack(cfg.webpack))
     .pipe(gp.rename('storux-with-runtime.js'))
     .pipe(gp.ifElse(envList.NODE_ENV === 'production', pipes.jsMin))
-    .pipe(gulp.dest(cfg.publicJsDir))
+    .pipe(gulp.dest(cfg.distDir))
   ;
 });
 
@@ -86,7 +86,7 @@ gulp.task('build.js', function() {
     .pipe(gp.webpack(webpackCfg))
     .pipe(gp.rename('storux.js'))
     .pipe(gp.ifElse(envList.NODE_ENV === 'production', pipes.jsMin))
-    .pipe(gulp.dest(cfg.publicJsDir))
+    .pipe(gulp.dest(cfg.distDir))
   ;
 });
 
@@ -96,7 +96,7 @@ gulp.task('build.js', function() {
 \*----------------------------------------------------------------------------*/
 
 gulp.task('build', gulp.series(
-  'clean.public',
+  'clean.dist',
   'build.files',
   'build.js',
   'build.js.with-runtime'

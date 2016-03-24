@@ -3,6 +3,7 @@
 node_modules/
 local/
 public/
+dist/
 .Trash-1000/
 .DS_Store
 Thumbs.db
