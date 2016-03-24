@@ -1,0 +1,1 @@
+APP_ENV=prod node --es_staging --harmony_destructuring `which gulp`
