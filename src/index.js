@@ -26,18 +26,6 @@ if (!WeakMap) {
 }
 
 class Storux {
-  static notActions = [
-    // prefixes: handlers
-    'on',
-    'handle',
-    // prefix: private and magic methods
-    '_',
-    // methods
-    'constructor',
-    'getState',
-    'getPrevState',
-    'setState'
-  ];
 
   /**
    * Check if `value` is an instance of `Store`.
@@ -68,12 +56,6 @@ class Storux {
       }
     }
   };
-
-  static removeScopePropsAfterCreation = [
-    'generateActions',
-    'mountAction',
-    'mountActions'
-  ];
 
   /**
    * @constructor
@@ -170,5 +152,24 @@ class Storux {
     return this.stores[storeName];
   }
 }
+
+Storux.notActions = [
+  // prefixes: handlers
+  'on',
+  'handle',
+  // prefix: private and magic methods
+  '_',
+  // methods
+  'constructor',
+  'getState',
+  'getPrevState',
+  'setState'
+];
+
+Storux.removeScopePropsAfterCreation = [
+  'generateActions',
+  'mountAction',
+  'mountActions'
+];
 
 module.exports = {Storux, Store, Scope, Evemit};
