@@ -584,7 +584,7 @@ class Scope {
 
     if (ln) {
       for (let i = 0; i < ln; i++) {
-        changeListeners[i](this);
+        changeListeners[i](this.store);
       }
     }
 
