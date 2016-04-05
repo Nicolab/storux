@@ -91,7 +91,7 @@ let utils = {
    * @return {string}
    */
   generateStoreName(store) {
-    return utils.lcFirst(store.constructor.name);
+    return utils.lcFirst(store.displayName || utils.getFuncName(store.constructor));
   },
 
   getFuncName(fn) {
