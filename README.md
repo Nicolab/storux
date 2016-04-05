@@ -96,4 +96,4 @@ module.exports = storux.createStore(MyStore);
 
 ## Contributors
 
-Thanks to [Irwin lourtet](https://github.com/pezioz) for the feedback.
+Thanks to [Irwin lourtet](https://github.com/ilourt).
