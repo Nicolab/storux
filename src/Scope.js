@@ -155,7 +155,11 @@ class Scope {
 
     for (let handlerName in list) {
       let actions = list[handlerName];
-      let actionHandler = this[handlerName];
+      let actionHandler = this.store[handlerName];
+
+      if (!this.store[handlerName].displayName) {
+        this.store[handlerName].displayName = handlerName;
+      }
 
       if (Array.isArray(actions)) {
         for (let i = 0, ln = actions.length; i < ln; i++) {
@@ -188,6 +192,10 @@ class Scope {
         let action = store[actionName];
         // if have a related action
         if (action) {
+          if (!store[prop].displayName) {
+            store[prop].displayName = prop;
+          }
+
           // {function} store.myAction, {function} store.onMyAction
           this.bindAction(action, store[prop]);
         }
