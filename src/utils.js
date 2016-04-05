@@ -95,7 +95,15 @@ let utils = {
   },
 
   getFuncName(fn) {
-    return fn.name || /^function\s+([\w\$]+)\s*\(/.exec(fn.toString())[1];
+    let fnName = fn.displayName || fn.name;
+
+    if (fnName) {
+      return fnName;
+    }
+
+    fnName = /^function\s+([\w\$]+)\s*\(/.exec(fn.toString());
+
+    return fnName ? fnName[1] : null;
   },
 
   defineDisplayName(obj, displayName) {
