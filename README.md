@@ -37,7 +37,7 @@ class MyStore extends Store {
   }
 
   fetch(dispatch, resourceId) {
-    dispatch();
+    dispatch(resourceId);
 
     return http
       .get('/some-resource/' + resourceId)
@@ -46,12 +46,17 @@ class MyStore extends Store {
     ;
   }
 
+  onFetch(resourceId, {nextState}) {
+    console.log('onFetch ' + resourceId);
+    return nextState;
+  }
+
   onFetchDone(data, {nextState}) {
     nextState.data = data;
     return nextState;
   }
 
-  onFetchFail(err) {
+  onFetchFail(err, {nextState}) {
     nextState.data = null;
     nextState.error = err;
     return nextState;
