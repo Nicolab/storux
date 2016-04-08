@@ -163,8 +163,8 @@ Storux.notActions = [
   '^constructor$',
   '^getState$',
   '^getPrevState$',
-  '^setState$',
-  '^mergeState$'
+  '^replaceState$',
+  '^setState$'
 ];
 
 Storux.removeScopePropsAfterCreation = [

@@ -488,7 +488,7 @@ class Scope {
       }
     }
 
-    return this.setState(nextState);
+    return this.replaceState(nextState);
   }
 
 
@@ -569,13 +569,13 @@ class Scope {
   }
 
   /**
-   * Set the new state of the store.
+   * Like `setState()` but replace all state by `nextState`.
    *
    * @param  {object} [nextState={}] Next state.
    * @return {bool} `true` if the state was changed,
    * `false` if the state is unchanged.
    */
-  setState(nextState = {}) {
+  replaceState(nextState = {}) {
     let changeListeners = this.changeListeners;
     let ln = changeListeners.length;
     let _private = _privateMap.get(this);
@@ -584,7 +584,7 @@ class Scope {
       return false;
     }
 
-    // state is already cloned (previous setState)
+    // state is already cloned (previous replaceState)
     // and prevState is cloned by getPrevState() on each call.
     // So needless to clone again prevState.
     _private.prevState = _private.state;
@@ -600,14 +600,14 @@ class Scope {
   }
 
   /**
-   * Merge the state of the store with `obj`.
+   * Performs a shallow merge of `obj` into current state of the store.
    *
    * @param  {object} obj Object to merge with the state.
    * @return {bool} `true` if the state was changed,
    * `false` if the state is unchanged.
    */
-  mergeState(obj) {
-    return this.setState({..._privateMap.get(this).state, ...obj});
+  setState(obj) {
+    return this.replaceState({..._privateMap.get(this).state, ...obj});
   }
 
   /**
@@ -617,7 +617,7 @@ class Scope {
    * `false` if the state is unchanged.
    */
   resetState() {
-    let hasChanged = this.setState(this.initialState);
+    let hasChanged = this.replaceState(this.initialState);
 
     if(hasChanged) {
       this.lifecycle.emit('resetState');
@@ -636,7 +636,7 @@ class Scope {
    * `false` if the state is unchanged.
    */
   recycle() {
-    let hasChanged = this.setState(this.initialState);
+    let hasChanged = this.replaceState(this.initialState);
 
     _privateMap.get(this).prevState = {};
     this.lifecycle.emit('init', hasChanged);

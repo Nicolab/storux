@@ -100,7 +100,7 @@ class ExternalStore extends Store {
 
   handleVirtual2(payload, result, hasChanged) {
     handleVirtual2Spy(payload, result, hasChanged);
-    this.scope.setState({'b': 'changed'});
+    this.scope.replaceState({'b': 'changed'});
   }
 }
 
@@ -184,7 +184,7 @@ describe('Actions', function() {
 
                     .undefined(sharedStore.getPrevState().changeState)
 
-                    .bool(sharedStore.setState({}))
+                    .bool(sharedStore.replaceState({}))
                       .isTrue()
                   ;
 
@@ -241,7 +241,7 @@ describe('Actions', function() {
           .isInstanceOf(Scope)
 
         .function(sharedStore.getState)
-        .function(sharedStore.setState)
+        .function(sharedStore.replaceState)
         .function(sharedStore.getPrevState)
         .function(sharedStore.virtualNeverCalled)
         .function(sharedStore.virtualForward)

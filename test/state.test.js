@@ -140,10 +140,10 @@ describe('State', function() {
           .is({sum: 1})
           .isNot({})
 
-      .bool(numberStore.setState({sum: 1}))
+      .bool(numberStore.replaceState({sum: 1}))
         .isFalse()
 
-      .bool(numberStore.setState({sum: 2}))
+      .bool(numberStore.replaceState({sum: 2}))
         .isTrue()
 
       .object(numberStore.getState())
@@ -163,7 +163,7 @@ describe('State', function() {
 
   });
 
-  it.skip('action doesn\'t call setState() if the state is not changed', function() {
+  it.skip('action doesn\'t call replaceState() if the state is not changed', function() {
 
   });
 });
