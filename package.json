@@ -1,6 +1,6 @@
 {
   "name": "storux",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "ES6 Flux implementation inspired by Redux and Alt.js.",
   "main": "./dist/storux.js",
   "keywords": [
