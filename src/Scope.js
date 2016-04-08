@@ -206,13 +206,50 @@ class Scope {
   }
 
   /**
-   * Bind a given action handler to a given listener.
+   * Attach a change `listener`.
+   *
+   * @param  {function} listener A callback called after each change.
+   * The callback receives the current `Store` instance.
+   * @return {function} A function to detach the listener.
+   * @see Scope.unlisten()
+   */
+  listen(listener) {
+    this.changeListeners.push(listener);
+    this.lifecycle.emit('listen', listener);
+
+    // push proxy
+    return () => this.unlisten(listener);
+  }
+
+  /**
+   * Detach a change `listener`.
+   *
+   * @param  {function} listener  A callback attached with `store.scope.listen()`.
+   * @return {bool}     `true` if the `listener` was found and detached, `false` otherwise.
+   * @see Scope.listen()
+   */
+  unlisten(listener) {
+    let changeListeners = this.changeListeners;
+    let i = changeListeners.indexOf(listener);
+
+    if (i === -1) {
+      return false;
+    }
+
+    changeListeners.splice(i, 1);
+    this.lifecycle.emit('unlisten', listener);
+
+    return true;
+  }
+
+  /**
+   * Attach a given `listener` to a `actionHandler`.
    *
    * @param  {function} actionHandler
    * @param  {function} listener
    * @return {Scope}  Current instance.
    */
-  bindActionHandler(actionHandler, listener) {
+  listenActionHandler(actionHandler, listener) {
     let _actionHandlerListenersMap = this.storux._actionHandlerListenersMap;
     let _actionHandlerListeners = _actionHandlerListenersMap.get(actionHandler);
 
@@ -226,6 +263,34 @@ class Scope {
     _actionHandlerListeners.push(listener);
 
     return this;
+  }
+
+  /**
+   * Detach a given action handler `listener`.
+   *
+   * @param  {function} actionHandler
+   * @param  {function} listener  A callback attached with `store.scope.listenHandler()`.
+   * @return {bool}     `true` if the `listener` was found and detached, `false` otherwise.
+   * @see Scope.listenHandler()
+   */
+  unlistenActionHandler(actionHandler, listener) {
+    let i;
+    let _actionHandlerListenersMap = this.storux._actionHandlerListenersMap;
+    let _actionHandlerListeners = _actionHandlerListenersMap.get(actionHandler);
+
+    if (!_actionHandlerListeners) {
+      return false;
+    }
+
+    i = _actionHandlerListeners.indexOf(listener);
+
+    if (i === -1) {
+      return false;
+    }
+
+    _actionHandlerListeners.splice(i, 1);
+
+    return true;
   }
 
   /**
@@ -511,43 +576,6 @@ class Scope {
     return Promise.resolve(
       this.reduceActionHandlers(actionHandlers, action, payload)
     );
-  }
-
-  /**
-   * Attach a change `listener`.
-   *
-   * @param  {function} listener A callback called after each change.
-   * The callback receives the current `Store` instance.
-   * @return {function} A function to detach the listener.
-   * @see Scope.unlisten()
-   */
-  listen(listener) {
-    this.changeListeners.push(listener);
-    this.lifecycle.emit('listen', listener);
-
-    // push proxy
-    return () => this.unlisten(listener);
-  }
-
-  /**
-   * Detach a change `listener`.
-   *
-   * @param  {function} listener  A callback attached with `store.scope.listen()`.
-   * @return {bool}     `true` if the `listener` was found and detached, `false` otherwise.
-   * @see Scope.listen()
-   */
-  unlisten(listener) {
-    let changeListeners = this.changeListeners;
-    let i = changeListeners.indexOf(listener);
-
-    if (i === -1) {
-      return false;
-    }
-
-    changeListeners.splice(i, 1);
-    this.lifecycle.emit('unlisten', listener);
-
-    return true;
   }
 
   /**
