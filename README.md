@@ -42,7 +42,7 @@ class MyStore extends Store {
     return http
       .get('/some-resource/' + resourceId)
       .then((data) => this.fetchDone(data))
-      .catch((err) => this.fetchFail(data))
+      .catch((err) => this.fetchFail(err))
     ;
   }
 
