@@ -46,24 +46,24 @@ class MyStore extends Store {
     ;
   }
 
-  onFetch(resourceId, {nextState}) {
+  onFetch(resourceId, nextState) {
     console.log('onFetch ' + resourceId);
     return nextState;
   }
 
-  onFetchDone(data, {nextState}) {
+  onFetchDone(data, nextState) {
     nextState.data = data;
     return nextState;
   }
 
-  onFetchFail(err, {nextState}) {
+  onFetchFail(err, nextState) {
     nextState.data = null;
     nextState.error = err;
     return nextState;
   }
 }
 
-// isomorphic way
+// universal way (isomorphic)
 module.exports = storux.createStore(MyStore);
 ```
 
@@ -101,4 +101,4 @@ module.exports = storux.createStore(MyStore);
 
 ## Contributors
 
-Thanks to [Irwin lourtet](https://github.com/ilourt).
+Thanks to [Irwin lourtet](https://github.com/ilourt) for the feedback.
