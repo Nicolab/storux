@@ -502,10 +502,10 @@ class Scope {
   getHandlerArgs({action, payload, nextState}) {
     return [
       payload,
+      nextState,
       {
         actionId: action.id,
-        actionName: action.displayName,
-        nextState
+        actionName: action.displayName
       }
     ];
   }

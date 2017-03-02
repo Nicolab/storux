@@ -103,7 +103,7 @@ describe('Flux', function() {
       return id;
     }
 
-    onV1(payload, {nextState, actionId, actionName}) {
+    onV1(payload, nextState, {actionId, actionName}) {
       test
         .string(payload)
           .isIdenticalTo('1')
@@ -120,7 +120,7 @@ describe('Flux', function() {
       return {...nextState, v1: true};
     }
 
-    onV2(payload, {nextState, actionId, actionName}) {
+    onV2(payload, nextState, {actionId, actionName}) {
       test
         .undefined(payload)
 
@@ -136,7 +136,7 @@ describe('Flux', function() {
       return {...nextState, v2: true};
     }
 
-    onDelay1(id, {nextState, actionId, actionName}) {
+    onDelay1(id, nextState, {actionId, actionName}) {
       test
         .number(id)
           .isIdenticalTo(1)
@@ -153,7 +153,7 @@ describe('Flux', function() {
       return {...nextState, delay1: true};
     }
 
-    onDelay2(id, {nextState, actionId, actionName}) {
+    onDelay2(id, nextState, {actionId, actionName}) {
       test
         .number(id)
           .isIdenticalTo(2)
@@ -170,7 +170,7 @@ describe('Flux', function() {
       return {...nextState, delay2: true};
     }
 
-    onDelay3(id, {nextState, actionId, actionName}) {
+    onDelay3(id, nextState, {actionId, actionName}) {
       test
         .number(id)
           .isIdenticalTo(3)
@@ -187,7 +187,7 @@ describe('Flux', function() {
       return {...nextState, delay3: true};
     }
 
-    onDelay4(id, {nextState, actionId, actionName}) {
+    onDelay4(id, nextState, {actionId, actionName}) {
       test
         .number(id)
           .isIdenticalTo(4)
