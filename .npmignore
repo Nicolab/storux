@@ -6,7 +6,7 @@ gulpfile.babel.js
 .babelrc
 .gitignore
 test/
-src/
+#src/
 node_modules/
 local/
 public/
