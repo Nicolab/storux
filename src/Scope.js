@@ -15,6 +15,7 @@ let {
   clone,
   isEquival,
   isStore,
+  getActionId,
   getStoreProtoProps,
   getFuncName,
   defineDisplayName,
@@ -71,13 +72,21 @@ class Scope {
   }
 
   beforeAction(action, listener, thisScope) {
-    this.storux.lifecycle.on('beforeAction.' + action.displayName, listener, thisScope);
+    this.storux.lifecycle.on(
+      'beforeAction.' + getActionId(this, action),
+      listener,
+      thisScope
+    );
 
     return this;
   }
 
   afterAction(action, listener, thisScope) {
-    this.storux.lifecycle.on('afterAction.' + action.displayName, listener, thisScope);
+    this.storux.lifecycle.on(
+      'afterAction.' + getActionId(this, action),
+      listener,
+      thisScope
+    );
 
     return this;
   }
@@ -397,9 +406,7 @@ class Scope {
             // shallow copy
             actionArgs = actionArgs.slice();
 
-            this.storux.lifecycle.emit(
-              'beforeAction.' + action.displayName, actionArgs
-            );
+            this.storux.lifecycle.emit('beforeAction.' + action.id, actionArgs);
 
             this.storux.lifecycle.emit('beforeActions', {
               actionId: action.id,
@@ -418,7 +425,7 @@ class Scope {
                   _private.currentAction = null;
 
                   this.storux.lifecycle.emit(
-                    'afterAction.' + action.displayName,
+                    'afterAction.' + action.id,
                     payload,
                     fnResult,
                     hasChanged
