@@ -94,6 +94,14 @@ let utils = {
     return utils.lcFirst(store.displayName || utils.getFuncName(store.constructor));
   },
 
+  getActionId(store, action) {
+    if (typeof action === 'string') {
+      return  store.displayName + '.' + action;
+    }
+
+    return action.id;
+  },
+
   getFuncName(fn) {
     let fnName = fn.displayName || fn.name;
 
