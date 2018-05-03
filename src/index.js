@@ -68,13 +68,13 @@ class Storux {
   }
 
   beforeAction(action, listener, thisScope) {
-    this.lifecycle.on('beforeAction.' + action.displayName, listener, thisScope);
+    this.lifecycle.on('beforeAction.' + action.id, listener, thisScope);
 
     return this;
   }
 
   afterAction(action, listener, thisScope) {
-    this.lifecycle.on('afterAction.' + action.displayName, listener, thisScope);
+    this.lifecycle.on('afterAction.' + action.id, listener, thisScope);
 
     return this;
   }
