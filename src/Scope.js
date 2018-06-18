@@ -223,6 +223,10 @@ class Scope {
    * @see Scope.unlisten()
    */
   listen(listener) {
+    if (typeof listener !== 'function') {
+      throw new TypeError(this.displayName + ': listener must be a function.');
+    }
+
     this.changeListeners.push(listener);
     this.lifecycle.emit('listen', listener);
 
@@ -627,7 +631,12 @@ class Scope {
 
     if (ln) {
       for (let i = 0; i < ln; i++) {
-        changeListeners[i](this.store);
+        if (typeof changeListeners[i] === 'function') {
+          changeListeners[i](this.store);
+        } else {
+          // prevent memory leak
+          changeListeners.splice(i, 1);
+        }
       }
     }
 
