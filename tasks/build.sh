@@ -1,1 +1,1 @@
-APP_ENV=prod node --es_staging `which gulp`
+APP_ENV=prod node `which gulp`
