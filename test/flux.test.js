@@ -29,18 +29,18 @@ const onDelay3Spy = test.spy();
 const onDelay4Spy = test.spy();
 
 const resetAllSpies = () => {
-  onV1Spy.reset();
-  onV2Spy.reset();
+  onV1Spy.resetHistory();
+  onV2Spy.resetHistory();
 
-  delay1Spy.reset();
-  delay2Spy.reset();
-  delay3Spy.reset();
-  delay4Spy.reset();
+  delay1Spy.resetHistory();
+  delay2Spy.resetHistory();
+  delay3Spy.resetHistory();
+  delay4Spy.resetHistory();
 
-  onDelay1Spy.reset();
-  onDelay2Spy.reset();
-  onDelay3Spy.reset();
-  onDelay4Spy.reset();
+  onDelay1Spy.resetHistory();
+  onDelay2Spy.resetHistory();
+  onDelay3Spy.resetHistory();
+  onDelay4Spy.resetHistory();
 };
 
 describe('Flux', function() {

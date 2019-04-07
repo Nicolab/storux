@@ -334,7 +334,7 @@ describe('Actions', function() {
         assert(thenDoneSpy.calledOnce, 'resolve action virtual1 ' + thenDoneSpy.callCount);
         assert(onVirtual1Spy.calledOnce, 'onVirtual1() was called once');
         assert(privateOnVirtual1Spy.calledOnce, '_onVirtual1() called once');
-        thenDoneSpy.reset();
+        thenDoneSpy.resetHistory();
         done();
       });
     });
