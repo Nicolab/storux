@@ -23,7 +23,8 @@ let {
   handlerNameToActionName
 } = require('./utils');
 
-const _privateMap = new WeakMap();
+// private map
+const _pm = new WeakMap();
 
 /**
  * Handle the scope of a `Store` instance.
@@ -39,7 +40,7 @@ class Scope {
    * @param  {Storux}  cfg.opt.storux  A `Storux` instance.
    */
   constructor({store, opt}) {
-    let _private;
+    let _p;
 
     this.storux = opt.storux;
     opt.storux = null;
@@ -48,16 +49,23 @@ class Scope {
     this.store = store;
     this.actionsStack = [];
     this.changeListeners = [];
-    this.lifecycle = new Evemit();
     this.initialState = this.opt.initialState || {};
+
+    // lifecycle
+    this._lc = new Evemit();
+    this.on = this._lc.on.bind(this._lc);
+    this.once = this._lc.once.bind(this._lc);
+    this.off = this._lc.off.bind(this._lc);
+    this.emit = this._lc.emit.bind(this._lc);
+    this.listeners = this._lc.listeners.bind(this._lc);
 
     // store name
     defineDisplayName(this, generateStoreName(this.store));
 
-    _private = _privateMap
+    _p = _pm
       .set(this, {
         currentAction: null,
-        actionsQueue: 0,
+        actionsQ: 0,
         prevState: {},
         state: this.initialState
       })
@@ -66,13 +74,13 @@ class Scope {
 
     // force the pattern: constructor -> init -> state usable
     // avoid to update the state in the constructor before the initialization
-    this.lifecycle.once('init', () => {
-      _private.state = this.initialState;
+    this.once('init', () => {
+      _p.state = this.initialState;
     });
   }
 
   beforeAction(action, listener, thisScope) {
-    this.storux.lifecycle.on(
+    this.storux.on(
       'beforeAction.' + getActionId(this, action),
       listener,
       thisScope
@@ -82,7 +90,7 @@ class Scope {
   }
 
   afterAction(action, listener, thisScope) {
-    this.storux.lifecycle.on(
+    this.storux.on(
       'afterAction.' + getActionId(this, action),
       listener,
       thisScope
@@ -101,7 +109,8 @@ class Scope {
   bindAction(action, handler) {
     let actionHandlers;
     let handlerName = getFuncName(handler);
-    let actionHandlersMap = this.storux._actionHandlersMap;
+    // action handlers (map)
+    let _ahm = this.storux._ahm;
 
     // if it's an external handler
     if (!this.store[action.displayName]
@@ -115,10 +124,11 @@ class Scope {
       );
     }
 
-    actionHandlers = actionHandlersMap.get(action);
+    // action handlers
+    actionHandlers = _ahm.get(action);
 
     if (!actionHandlers) {
-      actionHandlers = actionHandlersMap.set(action, []).get(action);
+      actionHandlers = _ahm.set(action, []).get(action);
     }
 
     actionHandlers.push(handler);
@@ -228,7 +238,7 @@ class Scope {
     }
 
     this.changeListeners.push(listener);
-    this.lifecycle.emit('listen', listener);
+    this.emit('listen', listener);
 
     // push proxy
     return () => this.unlisten(listener);
@@ -250,7 +260,7 @@ class Scope {
     }
 
     changeListeners.splice(i, 1);
-    this.lifecycle.emit('unlisten', listener);
+    this.emit('unlisten', listener);
 
     return true;
   }
@@ -263,17 +273,15 @@ class Scope {
    * @return {Scope}  Current instance.
    */
   listenActionHandler(actionHandler, listener) {
-    let _actionHandlerListenersMap = this.storux._actionHandlerListenersMap;
-    let _actionHandlerListeners = _actionHandlerListenersMap.get(actionHandler);
+    let _ahlm = this.storux._ahlm;
+    // action handlers listeners
+    let _ahl = _ahlm.get(actionHandler);
 
-    if (!_actionHandlerListeners) {
-      _actionHandlerListeners = _actionHandlerListenersMap
-        .set(actionHandler, [])
-        .get(actionHandler)
-      ;
+    if (!_ahl) {
+      _ahl = _ahlm.set(actionHandler, []).get(actionHandler);
     }
 
-    _actionHandlerListeners.push(listener);
+    _ahl.push(listener);
 
     return this;
   }
@@ -288,20 +296,20 @@ class Scope {
    */
   unlistenActionHandler(actionHandler, listener) {
     let i;
-    let _actionHandlerListenersMap = this.storux._actionHandlerListenersMap;
-    let _actionHandlerListeners = _actionHandlerListenersMap.get(actionHandler);
+    let _ahlm = this.storux._ahlm;
+    let _ahl = _ahlm.get(actionHandler);
 
-    if (!_actionHandlerListeners) {
+    if (!_ahl) {
       return false;
     }
 
-    i = _actionHandlerListeners.indexOf(listener);
+    i = _ahl.indexOf(listener);
 
     if (i === -1) {
       return false;
     }
 
-    _actionHandlerListeners.splice(i, 1);
+    _ahl.splice(i, 1);
 
     return true;
   }
@@ -384,14 +392,14 @@ class Scope {
    * @return {Scope} Current instance.
    */
   mountAction(actionName) {
-    let _private;
+    let _p;
 
     // if already mounted
     if (this.store[actionName] && this.store[actionName].id) {
       return this;
     }
 
-    _private = _privateMap.get(this);
+    _p = _pm.get(this);
 
     const fn = this.store[actionName];
     const action = (...actionArgs) => {
@@ -404,15 +412,15 @@ class Scope {
            * @return {*} The original return value.
            */
           proceed() {
-            _private.actionsQueue++;
-            _private.currentAction = action.id + '#' + _private.actionsQueue;
+            _p.actionsQ++;
+            _p.currentAction = action.id + '#' + _p.actionsQ;
 
             // shallow copy
             actionArgs = actionArgs.slice();
 
-            this.storux.lifecycle.emit('beforeAction.' + action.id, actionArgs);
+            this.storux.emit('beforeAction.' + action.id, actionArgs);
 
-            this.storux.lifecycle.emit('beforeActions', {
+            this.storux.emit('beforeActions', {
               actionId: action.id,
               actionName: action.displayName,
               actionArgs
@@ -425,17 +433,17 @@ class Scope {
                 .then((hasChanged) => {
                   resolve(fnResult);
 
-                  _private.actionsQueue--;
-                  _private.currentAction = null;
+                  _p.actionsQ--;
+                  _p.currentAction = null;
 
-                  this.storux.lifecycle.emit(
+                  this.storux.emit(
                     'afterAction.' + action.id,
                     payload,
                     fnResult,
                     hasChanged
                   );
 
-                  this.storux.lifecycle.emit('afterActions', {
+                  this.storux.emit('afterActions', {
                     actionId: action.id,
                     actionName: action.displayName,
                     result: fnResult,
@@ -502,7 +510,7 @@ class Scope {
   }
 
   _next() {
-    if (this.actionsStack.length && !_privateMap.get(this).currentAction) {
+    if (this.actionsStack.length && !_pm.get(this).currentAction) {
       this.actionsStack.shift().proceed.call(this);
       return true;
     }
@@ -512,8 +520,8 @@ class Scope {
 
   getHandlerArgs({action, payload, nextState}) {
     return [
-      payload,
       nextState,
+      payload,
       {
         actionId: action.id,
         actionName: action.displayName
@@ -540,7 +548,7 @@ class Scope {
 
   reduceActionHandlers(actionHandlers, action, payload) {
     let nextState;
-    let _actionHandlerListenersMap = this.storux._actionHandlerListenersMap;
+    let _ahlm = this.storux._ahlm;
 
     nextState = this.getState();
 
@@ -551,7 +559,7 @@ class Scope {
       );
 
       if (_nextState && typeof _nextState === 'object') {
-        let listeners = _actionHandlerListenersMap.get(actionHandler);
+        let listeners = _ahlm.get(actionHandler);
 
         nextState = _nextState;
 
@@ -577,7 +585,7 @@ class Scope {
    * `true` if the state was changed, `false` if the state is unchanged.
    */
   _dispatchAction({action, payload}) {
-    let actionHandlers = this.storux._actionHandlersMap.get(action);
+    let actionHandlers = this.storux._ahm.get(action);
 
     // if no action handlers
     if(!actionHandlers || !actionHandlers.length) {
@@ -595,7 +603,7 @@ class Scope {
    * @return {object} A clone of the state.
    */
   getState() {
-    return clone({}, _privateMap.get(this).state);
+    return clone({}, _pm.get(this).state);
   }
 
   /**
@@ -604,7 +612,7 @@ class Scope {
    * @return {object} A clone of the previous state.
    */
   getPrevState() {
-    return clone({}, _privateMap.get(this).prevState);
+    return clone({}, _pm.get(this).prevState);
   }
 
   /**
@@ -617,17 +625,17 @@ class Scope {
   replaceState(nextState = {}) {
     let changeListeners = this.changeListeners;
     let ln = changeListeners.length;
-    let _private = _privateMap.get(this);
+    let _p = _pm.get(this);
 
-    if (isEquival(_private.state, nextState)) {
+    if (isEquival(_p.state, nextState)) {
       return false;
     }
 
     // state is already cloned (previous replaceState)
     // and prevState is cloned by getPrevState() on each call.
     // So needless to clone again prevState.
-    _private.prevState = _private.state;
-    _private.state = clone({}, nextState);
+    _p.prevState = _p.state;
+    _p.state = clone({}, nextState);
 
     if (ln) {
       for (let i = 0; i < ln; i++) {
@@ -651,7 +659,7 @@ class Scope {
    * `false` if the state is unchanged.
    */
   setState(obj) {
-    return this.replaceState({..._privateMap.get(this).state, ...obj});
+    return this.replaceState({..._pm.get(this).state, ...obj});
   }
 
   /**
@@ -664,7 +672,7 @@ class Scope {
     let hasChanged = this.replaceState(this.initialState);
 
     if(hasChanged) {
-      this.lifecycle.emit('resetState');
+      this.emit('resetState');
     }
 
     return hasChanged;
@@ -682,8 +690,8 @@ class Scope {
   recycle() {
     let hasChanged = this.replaceState(this.initialState);
 
-    _privateMap.get(this).prevState = {};
-    this.lifecycle.emit('init', hasChanged);
+    _pm.get(this).prevState = {};
+    this.emit('init', hasChanged);
 
     return hasChanged;
   }

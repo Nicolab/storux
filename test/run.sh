@@ -1,4 +1,4 @@
-./node_modules/.bin/mocha ./test/**/*.test.js --compilers js:babel-register \
+npx mocha ./test/**/*.test.js --require babel-register \
 --recursive \
 --growl \
 --reporter spec \

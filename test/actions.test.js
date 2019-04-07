@@ -66,13 +66,13 @@ class SharedStore extends Store {
   }
 
   // added manually in a tests case
-  _onVirtual1(payload, context) {
-    privateOnVirtual1Spy(payload, context);
+  _onVirtual1(payload, ns, context) {
+    privateOnVirtual1Spy(payload, ns, context);
     return {};
   }
 
-  onVirtual1(payload, context) {
-    onVirtual1Spy(payload, context);
+  onVirtual1(payload, ns, context) {
+    onVirtual1Spy(payload, ns, context);
     return {};
   }
 
@@ -148,7 +148,7 @@ describe('Actions', function() {
                 })
               ;
             })
-            .catch((err) => catchError(err))
+            .catch(catchError)
         )
       ;
     });
@@ -192,7 +192,7 @@ describe('Actions', function() {
                 })
               ;
             })
-            .catch((err) => catchError(err))
+            .catch(catchError)
         )
       ;
     });
@@ -227,7 +227,7 @@ describe('Actions', function() {
                 })
               ;
             })
-            .catch((err) => catchError(err))
+            .catch(catchError)
         )
       ;
     });
@@ -309,24 +309,25 @@ describe('Actions', function() {
             .array(payload)
               .is(['a', 'b', 'c'])
 
-            // onVirtual1() called with (payload): a, b, c (first argument)
-            .array(privateOnVirtual1Spy.firstCall.args[0])
-              .is(payload)
-
-            // onVirtual1() called with: context (second argument)
-            .object(privateOnVirtual1Spy.firstCall.args[1])
-              .hasProperties(['actionId', 'actionName', 'nextState'])
-              .hasProperty('actionId', 'sharedStore.virtual1')
-              .hasProperty('actionName', 'virtual1')
-
-            .object(privateOnVirtual1Spy.firstCall.args[1].nextState)
+            // onVirtual1() called with nextState (first argument)
+            .object(privateOnVirtual1Spy.firstCall.args[0])
               .is({})
               .is(sharedStore.getState())
+
+            // onVirtual1() called with (payload): a, b, c (second argument)
+            .array(privateOnVirtual1Spy.firstCall.args[1])
+              .is(payload)
+
+            // onVirtual1() called with context (3rd argument)
+            .object(privateOnVirtual1Spy.firstCall.args[2])
+              .hasProperties(['actionId', 'actionName'])
+              .hasProperty('actionId', 'sharedStore.virtual1')
+              .hasProperty('actionName', 'virtual1')
           ;
 
           thenDoneSpy();
         })
-        .catch((err) => catchError(err))
+        .catch(catchError)
       ;
 
       test.wait(0, function() {
@@ -379,7 +380,7 @@ describe('Actions', function() {
 
           done();
         })
-        .catch((err) => catchError(err))
+        .catch(catchError)
       ;
     });
   });

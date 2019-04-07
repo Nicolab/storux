@@ -33,6 +33,14 @@ describe('Storux', function() {
     itHasInternalLifecycle(storux, storux.createStore(EmptyStore));
   });
 
+  it('should have the Store class accessible via storux.Store and Storux.Store', function() {
+    test
+      .function(Store)
+        .isIdenticalTo(Storux.Store)
+        .isIdenticalTo(storux.Store)
+    ;
+  });
+
   describe('Create store', function() {
     let instanceStore, instance2Store;
 
@@ -42,6 +50,7 @@ describe('Storux', function() {
       test
         .object(instanceStore)
           .isInstanceOf(Store)
+          .isInstanceOf(storux.Store)
           .isIdenticalTo(storux.stores.instanceStore)
 
         .object(instanceStore.scope)
@@ -50,6 +59,7 @@ describe('Storux', function() {
 
         .object(instanceStore.scope.store)
           .isInstanceOf(Store)
+          .isInstanceOf(storux.Store)
           .isIdenticalTo(instanceStore)
           .isIdenticalTo(storux.stores.instanceStore)
       ;
@@ -61,6 +71,7 @@ describe('Storux', function() {
       test
         .object(instance2Store)
           .isInstanceOf(Store)
+          .isInstanceOf(storux.Store)
           .isIdenticalTo(storux.stores.instance2Store)
 
         .object(instance2Store.scope)
@@ -69,6 +80,7 @@ describe('Storux', function() {
 
         .object(instance2Store.scope.store)
           .isInstanceOf(Store)
+          .isInstanceOf(storux.Store)
           .isIdenticalTo(instance2Store)
           .isIdenticalTo(storux.stores.instance2Store)
       ;

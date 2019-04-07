@@ -57,36 +57,50 @@ class Storux {
     }
   };
 
+  static Store = Store;
+
   /**
    * @constructor
    */
   constructor() {
     this.stores = {};
-    this.lifecycle = new Evemit();
-    this._actionHandlersMap = new WeakMap();
-    this._actionHandlerListenersMap = new WeakMap();
+    this.Store = Storux.Store;
+
+    // lifecycle
+    this._lc = new Evemit();
+    this.on = this._lc.on.bind(this._lc);
+    this.once = this._lc.once.bind(this._lc);
+    this.off = this._lc.off.bind(this._lc);
+    this.emit = this._lc.emit.bind(this._lc);
+    this.listeners = this._lc.listeners.bind(this._lc);
+
+    // action handlers (map)
+    this._ahm = new WeakMap();
+
+    // action handlers listeners (map)
+    this._ahlm = new WeakMap();
   }
 
   beforeAction(action, listener, thisScope) {
-    this.lifecycle.on('beforeAction.' + action.id, listener, thisScope);
+    this.on('beforeAction.' + action.id, listener, thisScope);
 
     return this;
   }
 
   afterAction(action, listener, thisScope) {
-    this.lifecycle.on('afterAction.' + action.id, listener, thisScope);
+    this.on('afterAction.' + action.id, listener, thisScope);
 
     return this;
   }
 
   beforeActions(listener, thisScope) {
-    this.lifecycle.on('beforeActions', listener, thisScope);
+    this.on('beforeActions', listener, thisScope);
 
     return this;
   }
 
   afterActions(listener, thisScope) {
-    this.lifecycle.on('afterActions', listener, thisScope);
+    this.on('afterActions', listener, thisScope);
 
     return this;
   }
@@ -138,8 +152,8 @@ class Storux {
       value: store
     });
 
-    this.lifecycle.emit('createStore', this.stores[storeName]);
-    this.lifecycle.emit('createStore.' + storeName, this.stores[storeName]);
+    this.emit('createStore', this.stores[storeName]);
+    this.emit('createStore.' + storeName, this.stores[storeName]);
 
     // remove the properties (of scope) used only to create the store
     Storux.removeScopePropsAfterCreation.forEach((prop) => {
@@ -147,7 +161,7 @@ class Storux {
     });
 
     // this store is initialized
-    store.scope.lifecycle.emit('init');
+    store.scope.emit('init');
 
     return this.stores[storeName];
   }

@@ -103,8 +103,10 @@ describe('Flux', function() {
       return id;
     }
 
-    onV1(payload, nextState, {actionId, actionName}) {
+    onV1(nextState, payload, {actionId, actionName}) {
       test
+        .object(nextState)
+
         .string(payload)
           .isIdenticalTo('1')
 
@@ -120,8 +122,10 @@ describe('Flux', function() {
       return {...nextState, v1: true};
     }
 
-    onV2(payload, nextState, {actionId, actionName}) {
+    onV2(nextState, payload, {actionId, actionName}) {
       test
+        .object(nextState)
+
         .undefined(payload)
 
         .string(actionId)
@@ -136,8 +140,10 @@ describe('Flux', function() {
       return {...nextState, v2: true};
     }
 
-    onDelay1(id, nextState, {actionId, actionName}) {
+    onDelay1(nextState, id, {actionId, actionName}) {
       test
+        .object(nextState)
+
         .number(id)
           .isIdenticalTo(1)
 
@@ -153,8 +159,10 @@ describe('Flux', function() {
       return {...nextState, delay1: true};
     }
 
-    onDelay2(id, nextState, {actionId, actionName}) {
+    onDelay2(nextState, id, {actionId, actionName}) {
       test
+        .object(nextState)
+
         .number(id)
           .isIdenticalTo(2)
 
@@ -170,8 +178,10 @@ describe('Flux', function() {
       return {...nextState, delay2: true};
     }
 
-    onDelay3(id, nextState, {actionId, actionName}) {
+    onDelay3(nextState, id, {actionId, actionName}) {
       test
+        .object(nextState)
+
         .number(id)
           .isIdenticalTo(3)
 
@@ -187,8 +197,10 @@ describe('Flux', function() {
       return {...nextState, delay3: true};
     }
 
-    onDelay4(id, nextState, {actionId, actionName}) {
+    onDelay4(nextState, id, {actionId, actionName}) {
       test
+        .object(nextState)
+
         .number(id)
           .isIdenticalTo(4)
 
@@ -216,12 +228,12 @@ describe('Flux', function() {
 
     describe('Unidirectional flux', function () {
       it('Action and listener executed and resolved one after one (reversed)', function(done) {
-        store.delay4(4).catch((err) => catchError(err));
-        store.v1('1').catch((err) => catchError(err));
-        store.delay3(3).catch((err) => catchError(err));
-        store.delay2(2).catch((err) => catchError(err));
-        store.v2().catch((err) => catchError(err));
-        store.delay1(1).catch((err) => catchError(err));
+        store.delay4(4).catch(catchError);
+        store.v1('1').catch(catchError);
+        store.delay3(3).catch(catchError);
+        store.delay2(2).catch(catchError);
+        store.v2().catch(catchError);
+        store.delay1(1).catch(catchError);
 
         test.wait(100, function() {
           assert(delay4Spy.calledOnce, 'delay4Spy.calledOnce');
@@ -271,12 +283,12 @@ describe('Flux', function() {
       });
 
       it('Action executed and resolved one after one (ordered)', function(done) {
-        store.v1('1').catch((err) => catchError(err));
-        store.delay1(1).catch((err) => catchError(err));
-        store.delay2(2).catch((err) => catchError(err));
-        store.delay3(3).catch((err) => catchError(err));
-        store.delay4(4).catch((err) => catchError(err));
-        store.v2().catch((err) => catchError(err));
+        store.v1('1').catch(catchError);
+        store.delay1(1).catch(catchError);
+        store.delay2(2).catch(catchError);
+        store.delay3(3).catch(catchError);
+        store.delay4(4).catch(catchError);
+        store.v2().catch(catchError);
 
         test.wait(100, function() {
           assert(onV1Spy.calledOnce, 'onV1Spy.calledOnce');
@@ -356,7 +368,7 @@ describe('Flux', function() {
 
             thenCount++;
           })
-          .catch((err) => catchError(err))
+          .catch(catchError)
         ;
 
         store
@@ -391,7 +403,7 @@ describe('Flux', function() {
 
             thenCount++;
           })
-          .catch((err) => catchError(err))
+          .catch(catchError)
         ;
 
         store
@@ -426,7 +438,7 @@ describe('Flux', function() {
 
             thenCount++;
           })
-          .catch((err) => catchError(err))
+          .catch(catchError)
         ;
 
         store
@@ -461,7 +473,7 @@ describe('Flux', function() {
 
             thenCount++;
           })
-          .catch((err) => catchError(err))
+          .catch(catchError)
         ;
 
         store
@@ -496,7 +508,7 @@ describe('Flux', function() {
 
             thenCount++;
           })
-          .catch((err) => catchError(err))
+          .catch(catchError)
         ;
 
         store
@@ -530,7 +542,7 @@ describe('Flux', function() {
 
             thenCount++;
           })
-          .catch((err) => catchError(err))
+          .catch(catchError)
         ;
 
         test.wait(100, function() {

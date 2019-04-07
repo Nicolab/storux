@@ -24,12 +24,15 @@ module.exports = function itHasInternalLifecycle(storux, store) {
   store = typeof store === 'string' ? storux.stores[store] : store;
 
   return test
-    .object(storux.lifecycle)
+    .object(storux._lc)
       .isInstanceOf(Evemit)
 
-    .object(store.scope.lifecycle)
-      .isIdenticalTo(storux.stores[store.scope.displayName].scope.lifecycle)
+    .object(store.scope._lc)
+      .isIdenticalTo(storux.stores[store.scope.displayName].scope._lc)
       .isInstanceOf(Evemit)
-      .isNotIdenticalTo(storux.lifecycle)
+
+    .object(store.scope._lc.events)
+      .isIdenticalTo(storux.stores[store.scope.displayName].scope._lc.events)
+      .isNotIdenticalTo(storux._lc.events)
   ;
 };

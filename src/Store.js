@@ -11,6 +11,16 @@
 
 const Scope = require('./Scope');
 
+// scope shortcut, define protected property in the store
+const dpsp = function(s, o, p) {
+  Object.defineProperty(o, p, {
+    enumerable: false,
+    configurable: false,
+    writable: false,
+    value: s[p].bind(s)
+  });
+}
+
 /**
  * Base class for each store.
  *
@@ -34,33 +44,10 @@ class Store {
       value: scope
     });
 
-    Object.defineProperty(this, 'getState', {
-      enumerable: false,
-      configurable: false,
-      writable: false,
-      value: scope.getState.bind(scope)
-    });
-
-    Object.defineProperty(this, 'replaceState', {
-      enumerable: false,
-      configurable: false,
-      writable: false,
-      value: scope.replaceState.bind(scope)
-    });
-
-    Object.defineProperty(this, 'setState', {
-      enumerable: false,
-      configurable: false,
-      writable: false,
-      value: scope.setState.bind(scope)
-    });
-
-    Object.defineProperty(this, 'getPrevState', {
-      enumerable: false,
-      configurable: false,
-      writable: false,
-      value: scope.getPrevState.bind(scope)
-    });
+    dpsp(scope, this, 'getState');
+    dpsp(scope, this, 'getPrevState');
+    dpsp(scope, this, 'replaceState');
+    dpsp(scope, this, 'setState');
   }
 }
 
