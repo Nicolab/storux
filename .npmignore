@@ -18,3 +18,4 @@ tasks/
 Thumbs.db
 .tmp/
 .idea/
+package-lock.json
