@@ -43,7 +43,7 @@
   "scripts": {
     "test": "./test/run.sh",
     "build": "parcel build ./src/index.js --target browser --out-file storux.js && node ./build.js && head -n 1 ./dist/storux.js",
-    "git-dist": "git add dist && git commit dist -m \"[dist] v\"$npm_package_version",
+    "git-dist": "git add dist && git commit dist -m \"[dist] v$npm_package_version\"",
     "deploy": "yarn build && yarn git-dist && git push -u origin master && npm publish"
   }
 }
