@@ -128,7 +128,7 @@ class MyStore extends storux.Store {
 export default storux.create(MyStore);
 ```
 
-And use the this store:
+And use this store:
 
 ```js
 // app.js
