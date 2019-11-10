@@ -10,378 +10,286 @@
 'use strict';
 
 const test = require('unit.js');
-const {Storux, Store, Scope} = require('../src/');
-const storux = new Storux();
-const onVirtualNeverCalledSpy = test.spy();
-const privateOnVirtual1Spy = test.spy();
-const onVirtual1Spy = test.spy();
-const onVirtual2Spy = test.spy();
-const handleVirtual2Spy = test.spy();
-
-let sharedStore;
+const {Storux, Store} = require('../dist/storux');
 let assert = test.assert;
-let {catchError} = require('./fixtures/helpers');
+let {handlePromise} = require('./fixtures/helpers');
 
-class SharedStore extends Store {
+class VirtActStore extends Store {
   constructor(opt) {
     super(opt);
 
     this
       .scope
-      .generateActions(
-        'virtualForward',
+      .ensureActions(
         'virtual1',
         'virtual2',
-        'virtualNeverCalled'
       )
-      .mountActions()
-      .bindActions(this)
+      .ensureSaveActions(
+        'virtualSave1',
+        'virtualSave2',
+      )
     ;
-  }
 
-  execAction(dispatch, {spy}) {
-    let args = arguments;
-    dispatch().then((hasChanged) => spy(hasChanged, ...args));
-    return 1;
-  }
-
-  execActionNotListened(dispatch, {spy}) {
-    let args = arguments;
-    dispatch().then((hasChanged) => spy(hasChanged, ...args));
-    return 2;
-  }
-
-  execActionNotReturn(dispatch, {spy}) {
-    let args = arguments;
-    dispatch().then((hasChanged) => spy(hasChanged, ...args));
-  }
-
-  execActionChangeState(dispatch, {spy}) {
-    let args = arguments;
-    dispatch().then((hasChanged) => spy(hasChanged, ...args));
-  }
-
-  onExecActionChangeState() {
-    return {changeState: true}
-  }
-
-  // added manually in a tests case
-  _onVirtual1(payload, ns, context) {
-    privateOnVirtual1Spy(payload, ns, context);
-    return {};
-  }
-
-  onVirtual1(payload, ns, context) {
-    onVirtual1Spy(payload, ns, context);
-    return {};
-  }
-
-  onVirtual2(payload, context) {
-    onVirtual2Spy()
-    return {a: 'changed'};
-  }
-
-  onVirtualNeverCalled() {
-    onVirtualNeverCalledSpy();
-    return {};
+    this.virtual1.hooks.push(this.onVirtual1);
+    this.virtual2.hooks.push(this.onVirtual2);
   }
 }
 
-class ExternalStore extends Store {
+class FooStore extends Store {
   constructor(opt) {
     super(opt);
 
-    sharedStore.scope.afterAction(
-      sharedStore.virtual2,
-      this.handleVirtual2,
-      this
-    );
+    this.scope.mountActions({
+      emptyDispatch: this.emptyDispatch,
+      dispatchWithPayload: this.dispatchWithPayload,
+      dispatchThePayload: this.dispatchThePayload,
+      saveData: this.saveData,
+    });
+
+    this.dispatchThePayload.hooks.push(this.onDispatchThePayload);
+    this.dispatchSpy = test.spy();
   }
 
-  handleVirtual2(payload, result, hasChanged) {
-    handleVirtual2Spy(payload, result, hasChanged);
-    this.scope.replaceState({'b': 'changed'});
+  emptyDispatch() {
+    this.scope.dispatch();
+    this.dispatchSpy('emptyDispatch');
+    return 'ret emptyDispatch';
+  }
+
+  dispatchWithPayload(payload) {
+    this.scope.dispatch().then((hasChanged) => {
+      test.bool(hasChanged).isFalse();
+      this.dispatchSpy('dispatchWithPayload', payload, hasChanged);
+    });
+
+    assert(arguments.length === 1, 'receive one argument');
+    assert(payload === 'hello', 'argument is hello');
+
+    return {ret: 'dispatchWithPayload', payload};
+  }
+
+  dispatchThePayload(payload) {
+    this.scope.dispatch(payload);
+    this.dispatchSpy('dispatchThePayload', payload);
+    return {ret: 'dispatchThePayload', payload};
+  }
+
+  onDispatchThePayload(ns, payload) {
+    ns.fromHook = 'onDispatchThePayload';
+    ns.receivedPayload = payload;
+
+    return ns;
+  }
+
+  saveData(payload) {
+    assert(arguments.length === 1, 'receive one argument');
+    assert(payload === 'hello', 'argument is hello');
+
+    this
+      .scope
+      .save({receivedPayload: payload, fromAction: 'saveData'})
+      .then((hasChanged) => {
+        this.dispatchSpy('saveData', payload, hasChanged);
+        test.bool(hasChanged).isTrue();
+      })
+    ;
+
+    return {ret: 'saveData', payload};
   }
 }
 
-sharedStore = storux.createStore(SharedStore);
-
 describe('Actions', function() {
-  after(function() {
-    assert(
-      !onVirtualNeverCalledSpy.called,
-      'onVirtualNeverCalled() is never called'
+  it('dispatch and resolve the returned value', function(done) {
+    let _storux = new Storux();
+    let fooStore = _storux.create(FooStore);
+
+    handlePromise(done, test
+      .promise
+      .given(fooStore.emptyDispatch())
+      .then((ret) => {
+        test
+          .string(ret)
+            .isIdenticalTo('ret emptyDispatch')
+
+          .undefined(fooStore.dispatchSpy.defer)
+          .undefined(fooStore.dispatchSpy.hooks)
+          .value(fooStore.dispatchSpy.id)
+            .notContains('fooStore')
+            .notContains('dispatchSpy')
+        ;
+
+        assert(
+          fooStore.dispatchSpy.calledOnce,
+          'fooStore.dispatchSpy.calledOnce'
+        );
+
+        assert(
+          fooStore.dispatchSpy.firstCall.args[0] === 'emptyDispatch',
+          'emptyDispatch called'
+        );
+      })
     );
   });
 
-  describe('Dispatch', function () {
-    it('dispatch an action not listened, '
-    + 'dispatch should returns a Promise (hasChanged false)', function(done) {
-      let actionSpy = test.spy();
+  it('dispatch (with payload) and resolve the returned value', function(done) {
+    let _storux = new Storux();
+    let fooStore = _storux.create(FooStore);
 
-      test
-        .object(
-          sharedStore
-            .execActionNotListened({spy: actionSpy})
-            .then((num) => {
-              test
-                .case('return a Promise that resolves the return value of the action')
-                .number(num)
-                  .isIdenticalTo(2)
+    handlePromise(done, test
+      .promise
+      .given(fooStore.dispatchWithPayload('hello'))
+      .then((ret) => {
+        test
+          .object(ret)
+            .is({ret: 'dispatchWithPayload', payload: 'hello'})
 
-                .case('action dispatched, but the spy is called from dispatch().then(spy)')
-                .wait(0, function() {
-                  test
-                    // hasChanged
-                    .bool(actionSpy.firstCall.args[0])
-                      .isFalse()
+          .undefined(fooStore.dispatchSpy.defer)
+          .undefined(fooStore.dispatchSpy.hooks)
+          .value(fooStore.dispatchSpy.id)
+            .notContains('fooStore')
+            .notContains('dispatchSpy')
+        ;
 
-                    // dispatch()
-                    .function(actionSpy.firstCall.args[1])
-
-                    // payload
-                    .object(actionSpy.firstCall.args[2])
-                      .is({spy: actionSpy})
-                  ;
-
-                  done();
-                })
-              ;
-            })
-            .catch(catchError)
-        )
-      ;
-    });
-
-    it('dispatch returns a Promise (hasChanged true)', function(done) {
-      let actionSpy = test.spy();
-
-      test
-        .undefined(sharedStore.getState().changeState)
-        .object(
-          sharedStore
-            .execActionChangeState({spy: actionSpy})
-            .then((result) => {
-              test
-                .undefined(result)
-
-                .case('action dispatched, but the spy is called from dispatch().then(spy)')
-                .wait(0, function() {
-                  test
-                    // hasChanged
-                    .bool(actionSpy.firstCall.args[0])
-                      .isTrue()
-
-                    // dispatch()
-                    .function(actionSpy.firstCall.args[1])
-
-                    // payload
-                    .object(actionSpy.firstCall.args[2])
-                      .is({spy: actionSpy})
-
-                    .bool(sharedStore.getState().changeState)
-                      .isTrue()
-
-                    .undefined(sharedStore.getPrevState().changeState)
-
-                    .bool(sharedStore.replaceState({}))
-                      .isTrue()
-                  ;
-
-                  done();
-                })
-              ;
-            })
-            .catch(catchError)
-        )
-      ;
-    });
-
-    it('dispatch an action not return', function(done) {
-      let actionSpy = test.spy();
-
-      test
-        .object(
-          sharedStore
-            .execActionNotReturn({spy: actionSpy})
-            .then((result) => {
-              test
-                .undefined(result)
-
-                .case('action dispatched, but the spy is called from dispatch().then(spy)')
-                .wait(0, function() {
-                  test
-                    // hasChanged
-                    .bool(actionSpy.firstCall.args[0])
-                      .isFalse()
-
-                    // dispatch()
-                    .function(actionSpy.firstCall.args[1])
-
-                    // payload
-                    .object(actionSpy.firstCall.args[2])
-                      .is({spy: actionSpy})
-                  ;
-
-                  done();
-                })
-              ;
-            })
-            .catch(catchError)
-        )
-      ;
-    });
+        assert(
+          fooStore.dispatchSpy.calledOnce,
+          'fooStore.dispatchSpy.calledOnce'
+        );
+      })
+    );
   });
 
-  describe('Virtual actions', function() {
-    it('generate actions and bind the virtual actions of the store', function() {
-      test
-        .object(sharedStore)
-        .object(sharedStore.scope)
-          .isInstanceOf(Scope)
+  it('dispatch the payload and resolve the returned value', function(done) {
+    let _storux = new Storux();
+    let fooStore = _storux.create(FooStore);
 
-        .function(sharedStore.getState)
-        .function(sharedStore.replaceState)
-        .function(sharedStore.getPrevState)
-        .function(sharedStore.virtualNeverCalled)
-        .function(sharedStore.virtualForward)
-        .function(sharedStore.virtual1)
-        .function(sharedStore.virtual2)
-      ;
-    });
+    handlePromise(done, test
+      .promise
+      .given(fooStore.dispatchThePayload('hello'))
+      .then((ret) => {
+        test
+          .object(ret)
+            .is({ret: 'dispatchThePayload', payload: 'hello'})
 
-    it('virtual actions have the properties ID and displayName', function() {
-      test
-        .string(sharedStore.virtualForward.displayName)
-          .isIdenticalTo('virtualForward')
+          .undefined(fooStore.dispatchSpy.defer)
+          .undefined(fooStore.dispatchSpy.hooks)
+          .value(fooStore.dispatchSpy.id)
+            .notContains('fooStore')
+            .notContains('dispatchSpy')
+        ;
 
-        .string(sharedStore.virtualForward.id)
-          .isIdenticalTo('sharedStore.virtualForward')
+        assert(
+          fooStore.dispatchSpy.calledOnce,
+          'fooStore.dispatchSpy.calledOnce'
+        );
 
-        .string(sharedStore.virtualNeverCalled.displayName)
-          .isIdenticalTo('virtualNeverCalled')
+        assert(
+          fooStore.dispatchSpy.firstCall.args[0] === 'dispatchThePayload',
+          'dispatchThePayload called'
+        );
 
-        .string(sharedStore.virtualNeverCalled.id)
-          .isIdenticalTo('sharedStore.virtualNeverCalled')
+        let state = fooStore.getState();
 
-        .string(sharedStore.virtual1.displayName)
-          .isIdenticalTo('virtual1')
+        assert(
+          state.fromHook === 'onDispatchThePayload',
+          'state from hook'
+        );
 
-        .string(sharedStore.virtual1.id)
-          .isIdenticalTo('sharedStore.virtual1')
+        test.string(state.receivedPayload).isIdenticalTo('hello');
+      })
+    );
+  });
 
-        .string(sharedStore.virtual2.displayName)
-          .isIdenticalTo('virtual2')
+  it('save() state and resolve the returned value', function(done) {
+    let _storux = new Storux();
+    let fooStore = _storux.create(FooStore);
 
-        .string(sharedStore.virtual2.id)
-          .isIdenticalTo('sharedStore.virtual2')
-      ;
-    });
+    handlePromise(done, test
+      .promise
+      .given(fooStore.saveData('hello'))
+      .then((ret) => {
+        test
+          .object(ret)
+            .is({ret: 'saveData', payload: 'hello'})
 
-    it('not call a not existing action', function() {
-      test.exception(function() {
-        sharedStore.notExists();
-      });
-    });
+          .undefined(fooStore.dispatchSpy.defer)
+          .undefined(fooStore.dispatchSpy.hooks)
+          .value(fooStore.dispatchSpy.id)
+            .notContains('fooStore')
+            .notContains('dispatchSpy')
+        ;
 
-    it('virtual action should keep only the first argument passed to the action', function(done) {
-      sharedStore
-        .virtualForward(1, 2, 3, 'a', 'b', 'c', {a: 'a value'}, ['a', 'b'])
-        .then((payload) => {
-          test.number(payload).is(1);
-          done();
-        })
-      ;
-    });
+        assert(
+          fooStore.dispatchSpy.calledOnce,
+          'fooStore.dispatchSpy.calledOnce'
+        );
 
-    it('bind (from external) a local action handler to local virtual action', function(done) {
-      let thenDoneSpy = test.spy();
+        assert(
+          fooStore.dispatchSpy.firstCall.args[0] === 'saveData',
+          'saveData called'
+        );
 
-      sharedStore.scope.bindAction(
-        sharedStore.virtual1,
-        sharedStore._onVirtual1
-      );
+        assert(
+          fooStore.dispatchSpy.firstCall.args[1] === 'hello',
+          'saveData payload'
+        );
 
-      sharedStore
-        .virtual1(['a', 'b', 'c'])
-        .then((payload) => {
-          test
-            .array(payload)
-              .is(['a', 'b', 'c'])
+        assert(
+          fooStore.dispatchSpy.firstCall.args[2] === true,
+          'saveData state hasChanged'
+        );
 
-            // onVirtual1() called with nextState (first argument)
-            .object(privateOnVirtual1Spy.firstCall.args[0])
-              .is({})
-              .is(sharedStore.getState())
+        let state = fooStore.getState();
 
-            // onVirtual1() called with (payload): a, b, c (second argument)
-            .array(privateOnVirtual1Spy.firstCall.args[1])
-              .is(payload)
+        assert(
+          state.fromAction === 'saveData',
+          'state from saveData action'
+        );
 
-            // onVirtual1() called with context (3rd argument)
-            .object(privateOnVirtual1Spy.firstCall.args[2])
-              .hasProperties(['actionId', 'actionName'])
-              .hasProperty('actionId', 'sharedStore.virtual1')
-              .hasProperty('actionName', 'virtual1')
-          ;
+        assert(
+          state.receivedPayload === 'hello',
+          'payload from saveData action'
+        );
+      })
+    );
+  });
 
-          thenDoneSpy();
-        })
-        .catch(catchError)
-      ;
+  it('save the state with virtual actions', function(done) {
+    let _storux = new Storux();
+    let vaStore = _storux.create(VirtActStore);
 
-      test.wait(0, function() {
-        assert(thenDoneSpy.calledOnce, 'resolve action virtual1 ' + thenDoneSpy.callCount);
-        assert(onVirtual1Spy.calledOnce, 'onVirtual1() was called once');
-        assert(privateOnVirtual1Spy.calledOnce, '_onVirtual1() called once');
-        thenDoneSpy.resetHistory();
-        done();
-      });
-    });
+    handlePromise(done, test
+      .promise
+      .given(vaStore.virtualSave1({hello: 'world'}))
+      .then((ret) => {
+        test
+          .function(vaStore.virtualSave1.defer)
+          .array(vaStore.virtualSave1.hooks)
+          .string(vaStore.virtualSave1.id)
+            .isIdenticalTo('virtActStore.virtualSave1')
 
-    it('listen (from store) an external action (virtual) to an action listener'
-    + ' and update the states of the two store', function(done) {
-      let externalStore = storux.createStore(ExternalStore);
+          .object(ret)
+            .is({hello: 'world'})
+            .is(vaStore.getState())
+        ;
 
-      sharedStore
-        .virtual2({a: false, b: true, c: false})
-        .then((payload) => {
-          test
-            .object(payload)
-              .is({a: false, b: true, c: false})
+        return vaStore
+          .virtualSave2({hello2: 'v2'})
+          .then((ret2) => {
+            test
+              .function(vaStore.virtualSave2.defer)
+              .array(vaStore.virtualSave2.hooks)
+              .string(vaStore.virtualSave2.id)
+                .isIdenticalTo('virtActStore.virtualSave2')
 
-            .wait(0, function() {
-              test
-                // handleVirtual2() called with payload: {a, b, c} (argument 1)
-                .object(handleVirtual2Spy.firstCall.args[0])
-                  .is(payload)
+              .object(ret2)
+                .is({hello2: 'v2'})
 
-                // handleVirtual2() called with action result: {a, b, c} (argument 2)
-                .object(handleVirtual2Spy.firstCall.args[1])
-                  .is(payload)
-
-                // handleVirtual2() called with: hasChanged (argument 3)
-                .bool(handleVirtual2Spy.firstCall.args[2])
-                  .isTrue()
-
-                .object(sharedStore.getState())
-                  .is({a: 'changed'})
-
-                .object(externalStore.getState())
-                  .is({b: 'changed'})
-              ;
-            })
-          ;
-
-          assert(handleVirtual2Spy.calledOnce, 'handleVirtual2() was called once');
-          assert(onVirtual2Spy.calledOnce, 'onVirtual2() was called once');
-          assert(onVirtual1Spy.calledOnce, 'onVirtual1() was always called once');
-          assert(privateOnVirtual1Spy.calledOnce, '_onVirtual1() was always called once');
-
-          done();
-        })
-        .catch(catchError)
-      ;
-    });
+                .object(vaStore.getState())
+                  .is({hello: 'world', hello2: 'v2'})
+            ;
+          })
+        ;
+      })
+    );
   });
 });

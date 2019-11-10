@@ -9,7 +9,7 @@
  */
 'use strict';
 
-let Store = require('../../src/Store');
+let {Store} = require('../../dist/storux');
 
 class EmptyStore extends Store {
 }

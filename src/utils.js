@@ -7,20 +7,19 @@
  * distributed with this source code
  * or visit https://github.com/Nicolab/storux
  */
-'use strict';
 
-let Scope, Store;
+let Store;
 
 let utils = {
   clone(target, ...sources) {
     sources.forEach((source) => {
-      let descriptors = Object.keys(source).reduce((descriptors, key) => {
-        descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
-        return descriptors;
+      let descriptors = Object.keys(source).reduce(function(_descriptors, key) {
+        _descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
+        return _descriptors;
       }, {});
 
       // By default, Object.assign copy the enumerable symbols
-      Object.getOwnPropertySymbols(source).forEach((sym) => {
+      Object.getOwnPropertySymbols(source).forEach(function(sym) {
         let descriptor = Object.getOwnPropertyDescriptor(source, sym);
 
         if (descriptor.enumerable) {
@@ -80,9 +79,9 @@ let utils = {
     return str.charAt(0).toLowerCase() + str.substr(1);
   },
 
-  handlerNameToActionName(str) {
-    return utils.lcFirst(str.substring(2));
-  },
+  // handlerNameToActionName(str) {
+  //   return utils.lcFirst(str.substring(2));
+  // },
 
   /**
    * Generate a conventional store name.
@@ -96,10 +95,14 @@ let utils = {
 
   getActionId(store, action) {
     if (typeof action === 'string') {
-      return  store.displayName + '.' + action;
+      return store.displayName + '.' + action;
     }
 
     return action.id;
+  },
+
+  toId(v) {
+    return typeof v === 'string' ? v : v.id;
   },
 
   getFuncName(fn) {
@@ -109,7 +112,7 @@ let utils = {
       return fnName;
     }
 
-    fnName = /^function\s+([\w\$]+)\s*\(/.exec(fn.toString());
+    fnName = /^function\s+([\w$]+)\s*\(/.exec(fn.toString());
 
     return fnName ? fnName[1] : null;
   },
@@ -119,7 +122,7 @@ let utils = {
       enumerable: true,
       configurable: false,
       writable: false,
-      value: displayName
+      value: displayName,
     });
   },
 
@@ -129,7 +132,7 @@ let utils = {
       Store = require('./Store');
     }
 
-    return true === value instanceof Store;
+    return value instanceof Store === true;
   },
 
   /**
@@ -150,21 +153,23 @@ let utils = {
       endProto,
       props.concat(Object
         .getOwnPropertyNames(obj.prototype)
-        .filter((prop) => props.indexOf(prop) === -1)
+        .filter(function(prop) {
+          return props.indexOf(prop) === -1;
+        })
       )
     );
   },
 
-  /**
-   * @param  {Store}  store Store class or Store instance.
-   * @return {array}
-   */
-  getStoreProtoProps(store) {
-    return utils.getProtoProps(
-      utils.isStore(store) ? store.constructor : store,
-      Store
-    );
-  }
+  // /**
+  //  * @param  {Store}  store Store class or Store instance.
+  //  * @return {array}
+  //  */
+  // getStoreProtoProps(store) {
+  //   return utils.getProtoProps(
+  //     utils.isStore(store) ? store.constructor : store,
+  //     Store
+  //   );
+  // }
 };
 
 module.exports = utils;

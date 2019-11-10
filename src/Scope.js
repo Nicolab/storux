@@ -7,30 +7,25 @@
  * distributed with this source code
  * or visit https://github.com/Nicolab/storux
  */
-'use strict';
 
 let Evemit = require('evemit');
 
 let {
   clone,
   isEquival,
-  isStore,
-  getActionId,
-  getStoreProtoProps,
   getFuncName,
   defineDisplayName,
   generateStoreName,
-  handlerNameToActionName
 } = require('./utils');
 
-// private map
-const _pm = new WeakMap();
+function defaultDispatcher() {
+  throw new ReferenceError('No action in progress');
+}
 
 /**
  * Handle the scope of a `Store` instance.
  */
 class Scope {
-
   /**
    * @constructor
    * @param  {object}  cfg             Scope config.
@@ -40,16 +35,18 @@ class Scope {
    * @param  {Storux}  cfg.opt.storux  A `Storux` instance.
    */
   constructor({store, opt}) {
-    let _p;
-
     this.storux = opt.storux;
     opt.storux = null;
 
     this.opt = opt;
     this.store = store;
-    this.actionsStack = [];
-    this.changeListeners = [];
-    this.initialState = this.opt.initialState || {};
+    this.initialState = this.opt.initialState
+      ? clone({}, this.opt.initialState)
+      : {}
+    ;
+
+    this.clone = clone;
+    this.dispatch = defaultDispatcher;
 
     // lifecycle
     this._lc = new Evemit();
@@ -62,170 +59,33 @@ class Scope {
     // store name
     defineDisplayName(this, generateStoreName(this.store));
 
-    _p = _pm
-      .set(this, {
-        currentAction: null,
-        actionsQ: 0,
-        prevState: {},
-        state: this.initialState
-      })
-      .get(this)
-    ;
+    // Internal object.
+    // Be careful, the reliability of the store can be degraded if misused.
+    // Risk of headache with the object reference,
+    // breaking the state flow in the application.
+    // But the perfs are better than a private Map.
+    this._p = {
+      // Queue (actions stack)
+      aq: [],
+
+      // current action
+      ca: null,
+
+      // change listeners
+      cl: [],
+    };
 
     // force the pattern: constructor -> init -> state usable
     // avoid to update the state in the constructor before the initialization
-    this.once('init', () => {
-      _p.state = this.initialState;
+    this.on('init', () => {
+      this.dispatch = defaultDispatcher;
+      this._p.ca = null;
+      this._p.state = clone({}, this.initialState);
     });
   }
 
-  beforeAction(action, listener, thisScope) {
-    this.storux.on(
-      'beforeAction.' + getActionId(this, action),
-      listener,
-      thisScope
-    );
-
-    return this;
-  }
-
-  afterAction(action, listener, thisScope) {
-    this.storux.on(
-      'afterAction.' + getActionId(this, action),
-      listener,
-      thisScope
-    );
-
-    return this;
-  }
-
   /**
-   * Bind a given action to a given handler.
-   *
-   * @param  {object}   action  Action name or action method (existing in this scope).
-   * @param  {function} handler
-   * @return {Store}  Current instance.
-   */
-  bindAction(action, handler) {
-    let actionHandlers;
-    let handlerName = getFuncName(handler);
-    // action handlers (map)
-    let _ahm = this.storux._ahm;
-
-    // if it's an external handler
-    if (!this.store[action.displayName]
-    || this.store[action.displayName] !== action
-    || !this.store[handlerName]
-    || this.store[handlerName] !== handler) {
-      throw new Error(
-        handlerName
-        + ' cannot bind the action (' + action.id + ') from another store.'
-        + ' Use instead the method "store.scope.afterAction()". See the doc.'
-      );
-    }
-
-    // action handlers
-    actionHandlers = _ahm.get(action);
-
-    if (!actionHandlers) {
-      actionHandlers = _ahm.set(action, []).get(action);
-    }
-
-    actionHandlers.push(handler);
-
-    return this;
-  }
-
-  /**
-   * Bind one or more action handlers to one or more actions.
-   *
-   * ---
-   *
-   * Bind the actions of the current store:
-   * ```js
-   * this.bindActions(this);
-   * ```
-   *
-   * Bind the actions of a given store
-   * ```js
-   * this.bindActions(anotherStore);
-   * ```
-   *
-   * Bind specific actions:
-   * ```js
-   * this.bindActions(
-   *   // list {handlerName: action}
-   *   onFetch: this.fetch,
-   *   onUpdate: this.update,
-   *   onDelete: this.delete,
-   *
-   *   // one or more actions to bind with `this.onShowLoader`
-   *   onShowLoader: [this.showLoader, this.fetch, this.update, this.delete],
-   * );
-   * ```
-   *
-   * @param {Store|array[function]} list
-   * @return {Scope}  Current instance.
-   */
-  bindActions(list) {
-    if (isStore(list)) {
-      return this.bindStoreActions(list);
-    }
-
-    for (let handlerName in list) {
-      let actions = list[handlerName];
-      let actionHandler = this.store[handlerName];
-
-      if (!this.store[handlerName].displayName) {
-        this.store[handlerName].displayName = handlerName;
-      }
-
-      if (Array.isArray(actions)) {
-        for (let i = 0, ln = actions.length; i < ln; i++) {
-          this.bindAction(actions[i], actionHandler);
-        }
-      } else {
-        this.bindAction(actions, actionHandler);
-      }
-    }
-
-    return this;
-  }
-
-  /**
-   * Bind each action of the `store` passed in argument.
-   *
-   * A handler is attached to the action,
-   * if his name is the action name prefixed by `on`.
-   *
-   * @param {Store} store Store where each action will be binded.
-   * @return {Scope}  Current instance.
-   */
-  bindStoreActions(store) {
-    let props = getStoreProtoProps(store);
-
-    for (let prop of props) {
-      // if handler
-      if (typeof store[prop] === 'function' && prop.indexOf('on') === 0) {
-        let actionName = handlerNameToActionName(prop);
-        let action = store[actionName];
-        // if have a related action
-        if (action) {
-          if (!store[prop].displayName) {
-            store[prop].displayName = prop;
-          }
-
-          // {function} store.myAction, {function} store.onMyAction
-          this.bindAction(action, store[prop]);
-        }
-      }
-    }
-
-    return this;
-  }
-
-  /**
-   * Attach a change `listener`.
+   * Attach a global state change `listener`.
    *
    * @param  {function} listener A callback called after each change.
    * The callback receives the current `Store` instance.
@@ -237,7 +97,7 @@ class Scope {
       throw new TypeError(this.displayName + ': listener must be a function.');
     }
 
-    this.changeListeners.push(listener);
+    this._p.cl.push(listener);
     this.emit('listen', listener);
 
     // push proxy
@@ -245,356 +105,25 @@ class Scope {
   }
 
   /**
-   * Detach a change `listener`.
+   * Detach a global state change `listener`.
    *
    * @param  {function} listener  A callback attached with `store.scope.listen()`.
-   * @return {bool}     `true` if the `listener` was found and detached, `false` otherwise.
+   * @return {bool}     `true` if the `listener` was found and detached,
+   * `false` otherwise.
    * @see Scope.listen()
    */
   unlisten(listener) {
-    let changeListeners = this.changeListeners;
-    let i = changeListeners.indexOf(listener);
+    let listeners = this._p.cl;
+    let i = listeners.indexOf(listener);
 
     if (i === -1) {
       return false;
     }
 
-    changeListeners.splice(i, 1);
+    listeners.splice(i, 1);
     this.emit('unlisten', listener);
 
     return true;
-  }
-
-  /**
-   * Attach a given `listener` to a `actionHandler`.
-   *
-   * @param  {function} actionHandler
-   * @param  {function} listener
-   * @return {Scope}  Current instance.
-   */
-  listenActionHandler(actionHandler, listener) {
-    let _ahlm = this.storux._ahlm;
-    // action handlers listeners
-    let _ahl = _ahlm.get(actionHandler);
-
-    if (!_ahl) {
-      _ahl = _ahlm.set(actionHandler, []).get(actionHandler);
-    }
-
-    _ahl.push(listener);
-
-    return this;
-  }
-
-  /**
-   * Detach a given action handler `listener`.
-   *
-   * @param  {function} actionHandler
-   * @param  {function} listener  A callback attached with `store.scope.listenHandler()`.
-   * @return {bool}     `true` if the `listener` was found and detached, `false` otherwise.
-   * @see Scope.listenHandler()
-   */
-  unlistenActionHandler(actionHandler, listener) {
-    let i;
-    let _ahlm = this.storux._ahlm;
-    let _ahl = _ahlm.get(actionHandler);
-
-    if (!_ahl) {
-      return false;
-    }
-
-    i = _ahl.indexOf(listener);
-
-    if (i === -1) {
-      return false;
-    }
-
-    _ahl.splice(i, 1);
-
-    return true;
-  }
-
-  /**
-   * Generate actions
-   *
-   * @param  {string} ...actionName One or more actions names.
-   * @return {Store}  Current instance.
-   */
-  generateActions(/*actionName, ...*/) {
-    let store = this.store;
-
-    for(let i = 0, ln = arguments.length; i < ln; i++) {
-      let actionName = arguments[i];
-
-      if(store[actionName]) {
-        throw new Error(
-          'generateActions(): ' + actionName + 'is already defined.'
-        );
-      }
-
-      // create the action method
-      store[actionName] = function(dispatch, payload) {
-        dispatch(payload);
-        return payload;
-      };
-    }
-
-    return this;
-  }
-
-  /**
-   * Ensure actions.
-   *
-   * Like `generateActions()` but skip each action already defined.
-   *
-   * @param  {string} ...actionName One or more actions names.
-   * @return {Store}  Current instance.
-   */
-  ensureActions(/*actionName, ...*/) {
-    let store = this.store;
-
-    for(let i = 0, ln = arguments.length; i < ln; i++) {
-      let actionName = arguments[i];
-
-      if(store[actionName]) {
-        continue;
-      }
-
-      // create the action method
-      store[actionName] = function(dispatch, payload) {
-        dispatch(payload);
-        return payload;
-      };
-    }
-
-    return this;
-  }
-
-  /**
-   * Push each action name in `Scope.opt.notActions` array.
-   * This method push '^actionName$'.
-   *
-   * @param  {String}   ...actionName On or more action names.
-   * @return {Scope}  Current instance.
-   */
-  notActions(actionName/*, ...*/) {
-    for (let name of arguments) {
-      this.opt.notActions.push('^' + name.trim() + '$');
-    }
-
-    return this;
-  }
-
-  /**
-   * Mount an action.
-   *
-   * @param  {string} actionName Action name (method name).
-   * @return {Scope} Current instance.
-   */
-  mountAction(actionName) {
-    let _p;
-
-    // if already mounted
-    if (this.store[actionName] && this.store[actionName].id) {
-      return this;
-    }
-
-    _p = _pm.get(this);
-
-    const fn = this.store[actionName];
-    const action = (...actionArgs) => {
-      return new Promise((resolve, reject) => {
-        this.actionsStack.push({
-          /**
-           * Call the original action.
-           * `this` bind to the `Scope` instance.
-           * `this` of implemented action method bind to the `Store` instance.
-           * @return {*} The original return value.
-           */
-          proceed() {
-            _p.actionsQ++;
-            _p.currentAction = action.id + '#' + _p.actionsQ;
-
-            // shallow copy
-            actionArgs = actionArgs.slice();
-
-            this.storux.emit('beforeAction.' + action.id, actionArgs);
-
-            this.storux.emit('beforeActions', {
-              actionId: action.id,
-              actionName: action.displayName,
-              actionArgs
-            });
-
-            // first arg: dispatch() called from the method implemented
-            // `payload` to dispatch
-            actionArgs.unshift((payload) => {
-              return this._dispatchAction({action, payload})
-                .then((hasChanged) => {
-                  resolve(fnResult);
-
-                  _p.actionsQ--;
-                  _p.currentAction = null;
-
-                  this.storux.emit(
-                    'afterAction.' + action.id,
-                    payload,
-                    fnResult,
-                    hasChanged
-                  );
-
-                  this.storux.emit('afterActions', {
-                    actionId: action.id,
-                    actionName: action.displayName,
-                    result: fnResult,
-                    payload,
-                    hasChanged
-                  });
-
-                  this._next();
-
-                  return hasChanged;
-                })
-                .catch((err) => {
-                  reject(err)
-                  throw err;
-                })
-              ;
-            });
-
-            const fnResult = fn.apply(this.store, actionArgs);
-          }
-        });
-
-        // if only in the stack, start the call stack.
-        // if not, the dispatcher will manage the progress of the stack.
-        if(this.actionsStack.length === 1) {
-          this._next();
-        }
-      })
-      .catch((err) => {
-        throw err;
-      });
-    };
-
-    // this.store[actionName].displayName
-    defineDisplayName(action, actionName);
-
-    action.id = this.displayName + '.' + action.displayName;
-    action.defer = (...args) => setTimeout(action.apply(this.store, args), 0);
-
-    // mounted!
-    this.store[actionName] = action;
-
-    return this;
-  }
-
-  /**
-   * Mount the actions of the store.
-   *
-   * @param  {string} [...name] Zero, one or more actions names.
-   * If zero, mountActionsResolver() is used.
-   * @return {Store}  Current instance.
-   */
-  mountActions(/*...name, */) {
-   if(arguments.length) {
-     for(let name of arguments) {
-       this.mountAction(name);
-     }
-   } else {
-     // resolve and mount the actions of the store
-     this.opt.mountActionsResolver(this.store);
-   }
-
-   return this;
-  }
-
-  _next() {
-    if (this.actionsStack.length && !_pm.get(this).currentAction) {
-      this.actionsStack.shift().proceed.call(this);
-      return true;
-    }
-
-    return false;
-  }
-
-  getHandlerArgs({action, payload, nextState}) {
-    return [
-      nextState,
-      payload,
-      {
-        actionId: action.id,
-        actionName: action.displayName
-      }
-    ];
-  }
-
-  callActionHandler({action, actionHandler, payload, nextState}) {
-    let nextStateUpdated = actionHandler.apply(
-      this.store,
-      this.getHandlerArgs({action, payload, nextState})
-    );
-
-    // if it break the chain, it's a design error
-    if (!nextStateUpdated || typeof nextStateUpdated !== 'object') {
-      throw new TypeError(
-        'The handler "' + getFuncName(actionHandler)
-        + '" should return the next state for the action ' + action.id
-      );
-    }
-
-    return nextStateUpdated;
-  }
-
-  reduceActionHandlers(actionHandlers, action, payload) {
-    let nextState;
-    let _ahlm = this.storux._ahlm;
-
-    nextState = this.getState();
-
-    for (let i = 0, ln = actionHandlers.length; i < ln; i++) {
-      let actionHandler = actionHandlers[i];
-      let _nextState = this.callActionHandler(
-        {action, actionHandler, payload, nextState}
-      );
-
-      if (_nextState && typeof _nextState === 'object') {
-        let listeners = _ahlm.get(actionHandler);
-
-        nextState = _nextState;
-
-        if (listeners && listeners.length) {
-          // call each listener of the current action handler
-          for (let i = 0, ln = listeners.length; i < ln; i++) {
-            listeners[i].apply(null, this.getHandlerArgs({action, payload, nextState}));
-          }
-        }
-      }
-    }
-
-    return this.replaceState(nextState);
-  }
-
-
-  /**
-   * Dispatch an `action` to all handlers of this `action`.
-   *
-   * @param  {function} action  Action.
-   * @param  {object}  [payload]  payload dispatched from the action.
-   * @return {Promise.<bool>}  A promise that will be resolved with a `boolean`.
-   * `true` if the state was changed, `false` if the state is unchanged.
-   */
-  _dispatchAction({action, payload}) {
-    let actionHandlers = this.storux._ahm.get(action);
-
-    // if no action handlers
-    if(!actionHandlers || !actionHandlers.length) {
-      return Promise.resolve(false);
-    }
-
-    return Promise.resolve(
-      this.reduceActionHandlers(actionHandlers, action, payload)
-    );
   }
 
   /**
@@ -603,16 +132,7 @@ class Scope {
    * @return {object} A clone of the state.
    */
   getState() {
-    return clone({}, _pm.get(this).state);
-  }
-
-  /**
-   * Get a clone of the previous state.
-   *
-   * @return {object} A clone of the previous state.
-   */
-  getPrevState() {
-    return clone({}, _pm.get(this).prevState);
+    return clone({}, this._p.state);
   }
 
   /**
@@ -623,27 +143,24 @@ class Scope {
    * `false` if the state is unchanged.
    */
   replaceState(nextState = {}) {
-    let changeListeners = this.changeListeners;
-    let ln = changeListeners.length;
-    let _p = _pm.get(this);
+    let ln, listeners;
 
-    if (isEquival(_p.state, nextState)) {
+    if (isEquival(this._p.state, nextState)) {
       return false;
     }
 
-    // state is already cloned (previous replaceState)
-    // and prevState is cloned by getPrevState() on each call.
-    // So needless to clone again prevState.
-    _p.prevState = _p.state;
-    _p.state = clone({}, nextState);
+    this._p.state = clone({}, nextState);
+    ln = this._p.cl.length;
 
     if (ln) {
+      listeners = this._p.cl;
+
       for (let i = 0; i < ln; i++) {
-        if (typeof changeListeners[i] === 'function') {
-          changeListeners[i](this.store);
+        if (typeof listeners[i] === 'function') {
+          listeners[i](this.store);
         } else {
           // prevent memory leak
-          changeListeners.splice(i, 1);
+          listeners.splice(i, 1);
         }
       }
     }
@@ -654,12 +171,12 @@ class Scope {
   /**
    * Performs a shallow merge of `obj` into current state of the store.
    *
-   * @param  {object} obj Object to merge with the state.
+   * @param  {object} obj Object to merge with the existing state.
    * @return {bool} `true` if the state was changed,
    * `false` if the state is unchanged.
    */
   setState(obj) {
-    return this.replaceState({..._pm.get(this).state, ...obj});
+    return this.replaceState({...this._p.state, ...obj});
   }
 
   /**
@@ -671,7 +188,7 @@ class Scope {
   resetState() {
     let hasChanged = this.replaceState(this.initialState);
 
-    if(hasChanged) {
+    if (hasChanged) {
       this.emit('resetState');
     }
 
@@ -681,8 +198,22 @@ class Scope {
   /**
    * Recycle the store:
    *  * Reset the state to the initial state.
-   *  * Reset prevState (previous state).
-   *  * Emit `init` event.
+   *  * Emit `init` event, with one argument `hasChanged`.
+   *
+   * ```js
+   * myStore.scope.on('init', function(hasChanged) {
+   *   // if first "init"
+   *   if (typeof hasChanged === 'undefined') {
+   *     console.log('first init');
+   *     return;
+   *   }
+   *
+   *   // recycled
+   *   console.log('recycled, state changed? ', hasChanged);
+   * });
+   *
+   * myStore.scope.recycle();
+   * ```
    *
    * @return {bool} `true` if the state was changed,
    * `false` if the state is unchanged.
@@ -690,11 +221,351 @@ class Scope {
   recycle() {
     let hasChanged = this.replaceState(this.initialState);
 
-    _pm.get(this).prevState = {};
     this.emit('init', hasChanged);
 
     return hasChanged;
   }
+
+  // eslint-disable-next-line spaced-comment
+  /*-----------------------------------------------------------------------*\
+    Actions
+  \*-----------------------------------------------------------------------*/
+
+  /**
+   * Dispatch the payload.
+   * Use this method when the state does not need to be updated.
+   *
+   * @param {*} [payload] Payload to dispatch.
+   * @param {object} [obj] Object to merge with the existing state.
+   * @return {Promise.<bool>}  A promise that will be resolved with a `boolean`.
+   * `true` if the state was changed, `false` if the state is unchanged.
+   */
+  // dispatch = defaultDispatcher
+
+  /**
+   * Save the object with the existing state and dispatch the payload.
+   *
+   * @param {object} obj Object to merge with the existing state.
+   * Use only when the action has no action hook(s) defined.
+   * @param {*} payload Payload to dispatch.
+   * @return {Promise.<bool>}  A promise that will be resolved with a `boolean`.
+   * `true` if the state was changed, `false` if the state is unchanged.
+   */
+  save(obj, payload) {
+    if (!this.dispatch._action || !this._p.ca) {
+      throw new ReferenceError('No action in progress.');
+    }
+
+    if (this.dispatch._action.hooks.length) {
+      throw new TypeError(
+        'This action have one or more hooks. Use dispatch() instead save().'
+      );
+    }
+
+    if (typeof obj !== 'object') {
+      throw new TypeError(
+        'save() require an object in ' + this.dispatch._action.id
+      );
+    }
+
+    return this.dispatch(payload, obj);
+  }
+
+  /**
+   * Dispatch an `action`.
+   * If one or more hooks exists, they are called one by one (reducing).
+   *
+   * @param  {function} action  Action.
+   * @param  {object}  [payload]  payload dispatched from the action.
+   * @param {object} [obj] Object to merge with the existing state,
+   * used only when the action has no hooks defined.
+   * @return {bool}  `true` if the state was changed,
+   * `false` if the state is unchanged.
+   */
+  _dispatcher({resolve, action, payload, obj, fnResult}) {
+    let hasChanged;
+    const scope = this;
+
+    if (scope.dispatch._inProgress) {
+      throw new Error('Dispatching in progress: ' + action.id
+        + ' The dispatcher must be called only once by action.'
+      );
+    }
+
+    scope.dispatch._inProgress = true;
+
+    // if no action hooks
+    if (!action.hooks.length) {
+      hasChanged = obj ? this.setState(obj) : false;
+    } else {
+      // call one by one (reducing).
+      hasChanged = this._reduceActionHooks(action, payload);
+    }
+
+    // reset the dispatcher
+    scope.dispatch = defaultDispatcher;
+
+    resolve(fnResult);
+
+    scope.storux.emit(
+      'after.' + action.id,
+      payload,
+      fnResult,
+      hasChanged
+    );
+
+    scope.storux.emit('after', {
+      actionId: action.id,
+      actionName: action.displayName,
+      result: fnResult,
+      payload,
+      hasChanged,
+    });
+
+    // reset current action
+    scope._p.ca = null;
+    scope._next();
+
+    return hasChanged;
+  }
+
+  _next() {
+    if (this._p.aq.length && !this.dispatch._action && !this._p.ca) {
+      this._p.aq.shift()();
+      return true;
+    }
+
+    return false;
+  }
+
+  _createActionProxy(fn) {
+    const action = (...actionArgs) => {
+      return new Promise((resolve) => {
+        const scope = this;
+
+        this._p.aq.push(
+          /**
+           * Call the original action.
+           * `this` of implemented action method bind to the `Store` instance.
+           *
+           * @return {*} The original return value.
+           */
+          function proceed() {
+            if (scope.dispatch._action || scope._p.ca) {
+              throw new Error(
+                action.id + ' can be called, because the action '
+                + scope.dispatch._action.id + ' is not finished'
+              );
+            }
+
+            /**
+            * Dispatch the payload. Added when the action is called.
+            *
+            * @param {*} payload
+            * @param {object} [obj] Object to merge with the existing state,
+            * used only when the action has no action handler(s) defined.
+            * @return {Promise.<bool>}  A promise that will be resolved with a `boolean`.
+            * `true` if the state was changed, `false` if the state is unchanged.
+            */
+            scope.dispatch = function dispatch(payload, obj) {
+              // eslint-disable-next-line promise/param-names
+              return new Promise(function(ok) {
+                // dispatch on the next event loop
+                setImmediate(function() {
+                  ok(scope._dispatcher(
+                    {resolve, action, payload, obj, fnResult}
+                  ));
+                });
+              });
+            };
+
+            // add the current action ref when the action is called
+            scope.dispatch._action = action;
+            scope._p.ca = action.id;
+
+            // lifecycle
+
+            // shallow copy
+            actionArgs = actionArgs.slice();
+
+            scope.storux.emit('before.' + action.id, actionArgs);
+
+            scope.storux.emit('before', {
+              actionId: action.id,
+              actionName: action.displayName,
+              actionArgs,
+            });
+
+            const fnResult = fn.apply(scope.store, actionArgs);
+          }
+        );
+
+        // if only one in the stack, start the call stack.
+        // if not, the dispatcher will manage the progress of the stack.
+        if (this._p.aq.length === 1) {
+          this._next();
+        }
+      });
+    };
+
+    return action;
+  }
+
+  _getHandlerArgs({action, payload, nextState}) {
+    return [
+      nextState,
+      payload,
+      {
+        actionId: action.id,
+        actionName: action.displayName,
+      },
+    ];
+  }
+
+  _reduceActionHooks(action, payload) {
+    let nextState = this.getState();
+
+    for (let i = 0, ln = action.hooks.length; i < ln; i++) {
+      let hook = action.hooks[i];
+
+      if (typeof hook !== 'function') {
+        throw new TypeError(
+          'The hook must be a function. Hook type: ' + typeof hook
+        );
+      }
+
+      let _nextState = hook.apply(
+        this.store,
+        this._getHandlerArgs({action, payload, nextState})
+      );
+
+      // if it break the chain, it's a design error
+      if (!_nextState || typeof _nextState !== 'object') {
+        throw new TypeError(
+          'The hook "' + getFuncName(hook)
+          + '" should return the next state for the action ' + action.id
+        );
+      }
+
+      nextState = _nextState;
+    }
+
+    return this.replaceState(nextState);
+  }
+
+  /**
+   * Mount an action.
+   *
+   * @param  {string} actionName Action name (method name).
+   * @return {Scope} Current instance.
+   */
+  mountAction(actionName, fn) {
+    // if already mounted
+    if (this.store[actionName] && this.store[actionName].id) {
+      return this;
+    }
+
+    const action = this._createActionProxy(fn);
+
+    // this.store[actionName].displayName
+    defineDisplayName(action, actionName);
+
+    let fnName = getFuncName(fn);
+
+    if (fnName && typeof this.store[fnName] === 'function') {
+      this.store[fnName] = undefined;
+    }
+
+    action.id = this.displayName + '.' + action.displayName;
+    action.defer = (...args) => setImmediate(action.apply(this.store, args));
+    action.hooks = [];
+
+    // mounted!
+    this.store[actionName] = action;
+
+    return this;
+  }
+
+  /**
+   * Mount the actions of the store.
+   *
+   * ```js
+   * this.scope.mountActions({
+   *  create: this.create,
+   *  update: this.update,
+   * });
+   * ```
+   *
+   * @param  {object} actions One or more actions names.
+   * @return {Store}  Current instance.
+   */
+  mountActions(actions) {
+    if (typeof actions !== 'object') {
+      throw new ReferenceError(
+        'mountActions() requiere one or more actions to mount'
+      );
+    }
+
+    for (let name in actions) {
+      this.mountAction(name, actions[name]);
+    }
+
+    return this;
+  }
+
+  /**
+   * Generate one or more actions if they have not been defined.
+   * The difference with this `ensureSaveActions()`,
+   * the payload is not saved in the state.
+   * The generated actions use `Scope.dispatch()`.
+   *
+   * @param  {string} ...actionName One or more actions names.
+   * @return {Store}  Current instance.
+   */
+  ensureActions(/* actionName, ...*/) {
+    return this._generateActions('dispatch', arguments);
+  }
+
+  /**
+   * Generate one or more actions if they have not been defined.
+   * The difference with `ensureActions()`,
+   * the payload is saved in the state.
+   * The generated actions use `Scope.save()`.
+   *
+   * @param  {string} ...actionName One or more actions names.
+   * @return {Store}  Current instance.
+   */
+  ensureSaveActions(/* actionName, ...*/) {
+    return this._generateActions('save', arguments);
+  }
+
+  _generateActions(method, actions) {
+    let store = this.store;
+
+    for (let i = 0, ln = actions.length; i < ln; i++) {
+      let actionName = actions[i];
+
+      if (store[actionName]) {
+        continue;
+      }
+
+      // create the action method (passthrough)
+      store[actionName] = function(payload) {
+        if (method === 'save') {
+          store.scope.save(payload, payload);
+        } else {
+          store.scope.dispatch(payload);
+        }
+
+        return payload;
+      };
+
+      this.mountAction(actionName, store[actionName]);
+    }
+
+    return this;
+  }
 }
 
 module.exports = Scope;
+module.exports.default = Scope;

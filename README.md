@@ -1,14 +1,28 @@
 # Storux
 
-ES6 Flux implementation using actions, listeners and reducers.
+<div align="center">
+  <img with="120" alt="Storux" src="/doc/assets/img/storux.png" />
+</div>
+
+Easy and powerful state store (Flux implementation) using actions, listeners and reducers (optional).
+Storux is a state store manager, to manage the state of an application (Website, App mobile, Web App, ...).
+
+You can manage the entire state of your project with a single store
+or separate the state into many specific stores (authStore, articleStore, commentStore, appStore, ...).
+
+Storux's philosophy is to be easy to use and productive. Powerful and makes life easier for the front developer.
+
+Take advantage of the possibilities and __Enjoy!__
 
 ## Install
+
+With NPM:
 
 ```sh
 npm install storux --save
 ```
 
-or
+or with Yarn:
 
 ```sh
 yarn add storux
@@ -16,13 +30,15 @@ yarn add storux
 
 ## Usage
 
-> TODO: doc
+> 💡 __Recommended__
+> Take a quick tour in the doc: [Learn Storux](/doc).
 
-
-_MyStore.js_
+Quick example:
 
 ```js
-let {Storux} = require('storux');
+// myStore.js
+
+let {Storux, action, hook} = require('storux');
 let storux = new Storux();
 
 class MyStore extends storux.Store {
@@ -31,43 +47,52 @@ class MyStore extends storux.Store {
 
     this
       .scope
-
       // helpers that generate some actions
-      .generateActions(
+      .ensureActions(
         'fetchDone',
         'fetchFail'
       )
-
-      // mount all actions of the store
-      .mountActions()
-
-      // automatically bind all actions handlers.
-      // Resolved by the naming convention: on<Action> or handle<Action>
-      .bindActions(this)
     ;
-  }
 
-  fetch(dispatch, resourceId) {
-    dispatch(resourceId);
-
-    // like axios and other HTTP lib
-    return http
-      .get('/some-resource/' + resourceId)
-      .then((res) => this.fetchDone(res.data))
-      .catch(this.fetchFail)
-    ;
+    this.scope.initialState = {
+      count: 0,
+      data: null,
+      err: null,
+    };
   }
 
   /**
-   * Fetch() handler.
+   * Add a number to the counter.
    *
-   * @param {object} ns The next state.
-   * @param {string} resourceId A given resource id.
-   * @return {object} Returns the next state.
+   * @param {number} num
+   * @return {Promise} Promise that resolve the new counter value.
    */
-  onFetch(ns, resourceId) {
-    console.log('onFetch ' + resourceId);
-    return ns;
+  @action('add')
+  add(num) {
+    let state = this.getState();
+    let count = state.count + num;
+
+    this._save({count});
+
+    return count;
+  }
+
+  /**
+   * Fetch a resource.
+   *
+   * @param {string} id Resource ID.
+   * @return {Promise} Resolve the resource data.
+   */
+  @action('fetch')
+  fetch(id) {
+    this._dispatch(id);
+
+    // like axios and other HTTP lib
+    return http
+      .get('/some-resource/' + id)
+      .then((res) => this.fetchDone(res.data))
+      .catch(this.fetchFail)
+    ;
   }
 
   /**
@@ -77,8 +102,10 @@ class MyStore extends storux.Store {
    * @param {object} data Some data.
    * @return {object} Returns the next state.
    */
+  @hook('fetchDone')
   onFetchDone(ns, data) {
     ns.data = data;
+
     return ns;
   }
 
@@ -89,15 +116,35 @@ class MyStore extends storux.Store {
    * @param {Error} err Error instance.
    * @return {object} Returns the next state.
    */
+  @hook('fetchFail')
   onFetchFail(ns, err) {
     ns.data = null;
     ns.error = err;
+
     return ns;
   }
 }
 
-// universal way (isomorphic)
-module.exports = storux.createStore(MyStore);
+export default storux.create(MyStore);
+```
+
+And use the this store:
+
+```js
+// app.js
+
+import myStore from './stores/myStore';
+
+myStore.fetch('db-id-xyz').then((data) => {
+  console.log('data: ', data);
+});
+
+myStore.add(42).then((count) => {
+  console.log('count: ', count);
+});
+
+// It's more relevant to use the lifecycle, like "listen()" and "unlisten()".
+// Example for render the state in a UI component.
 ```
 
 Also, each store is accessible via the `Storux` instance that was used to create it.
@@ -117,29 +164,11 @@ class WSStore extends storux.Store {
 }
 ```
 
-### Lifecycle
-#### Storux Lifecycle
-##### createStore
-##### createStore.<store name>
-##### beforeActions
-##### afterActions
-##### beforeAction.<action name>
-##### afterAction.<action name>
-
-#### Store Lifecycle
-
-##### init
-##### resetState
-##### listen
-##### unlisten
-##### beforeAction.<action name>
-##### afterAction.<action name>
-
+> 💡 Take a quick tour in the doc: [Learn Storux](doc) (recommended).
 
 ## LICENSE
 
 [MIT](https://github.com/Nicolab/storux/blob/master/LICENSE) (c) 2016, Nicolas Tallefourtane.
-
 
 ## Author
 
@@ -147,7 +176,6 @@ class WSStore extends storux.Store {
 |---|
 | [Nicolas Talle](https://nicolab.net) |
 | [![Make a donation via Paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=PGRH4ZXP36GUC) |
-
 
 ## Contributors
 

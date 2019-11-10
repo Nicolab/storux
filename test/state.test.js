@@ -10,76 +10,19 @@
 'use strict';
 
 const test = require('unit.js');
-const {Storux, Store} = require('../src/');
+const {Storux, Store} = require('../dist/storux');
 const storux = new Storux();
-const onVirtualNeverCalledSpy = test.spy();
 
 let sharedStore;
-let assert = test.assert;
-let {catchError} = require('./fixtures/helpers');
 
 class SharedStore extends Store {
   constructor(opt) {
     super(opt);
 
-    this
-      .scope
-      .generateActions(
-        'inc',
-        'dec',
-        'virtualNeverCalled'
-      )
-      .mountActions()
-      .bindActions(this)
-    ;
-
     this.scope.initialState = {
       sum: 0,
-      ...opt.initialState
+      ...this.scope.initialState
     };
-  }
-
-  onInc({number, testStateSum = true}, {state, nextState}) {
-    test
-      .object(this.getState())
-        .is(state)
-        .isNotEqualTo(state)
-        .isEqualTo(nextState)
-    ;
-
-    if (testStateSum) {
-      test
-        .number(this.getState().sum)
-          .is(state.sum)
-          .isNot(nextState.sum)
-      ;
-    }
-
-    return {...nextState, sum: nextState.sum + number};
-  }
-
-  onDec({number, testStateSum = true}, {state, nextState}) {
-    test
-      .object(this.getState())
-        .is(state)
-        .isNotEqualTo(state)
-        .isEqualTo(nextState)
-    ;
-
-    if (testStateSum) {
-      test
-        .number(this.getState().sum)
-          .is(state.sum)
-          .isNot(nextState.sum)
-      ;
-    }
-
-    return {...nextState, sum: nextState.sum - number};
-  }
-
-  onVirtualNeverCalled() {
-    onVirtualNeverCalledSpy();
-    return {sum: 0};
   }
 }
 
@@ -87,7 +30,7 @@ class NumberStore extends SharedStore {
 
 }
 
-sharedStore = storux.createStore(SharedStore);
+sharedStore = storux.create(SharedStore);
 
 describe('State', function() {
   it('get state', function() {
@@ -101,7 +44,7 @@ describe('State', function() {
 
   it('init the initial state', function() {
     let _storux = new Storux();
-    let numberStore = _storux.createStore(NumberStore, {initialState: {sum: 1}});
+    let numberStore = _storux.create(NumberStore, {initialState: {sum: 1}});
 
     test
       .number(sharedStore.getState().sum)
@@ -112,12 +55,50 @@ describe('State', function() {
     ;
   });
 
-  it.skip('reset to initial state', function() {
+  // TODO: add a spy listener
+  it('reset to initial state', function() {
+    let _storux = new Storux();
+    let numberStore = _storux.create(NumberStore, {initialState: {sum: 1}});
 
+    test
+      .number(numberStore.getState().sum)
+        .isIdenticalTo(1)
+
+      .bool(numberStore.setState({sum: 42}))
+        .isTrue()
+
+      .number(numberStore.getState().sum)
+        .isIdenticalTo(42)
+
+      .bool(numberStore.scope.resetState())
+        .isTrue()
+
+      .number(numberStore.getState().sum)
+        .isIdenticalTo(1)
+    ;
   });
 
-  it.skip('reset to initial state when the store is recycled', function() {
+  // TODO: add some spies listeners
+  it('reset to initial state when the store is recycled', function() {
+    let _storux = new Storux();
+    let numberStore = _storux.create(NumberStore, {initialState: {sum: 1}});
 
+    test
+      .number(numberStore.getState().sum)
+        .isIdenticalTo(1)
+
+      .bool(numberStore.setState({sum: 42}))
+        .isTrue()
+
+      .number(numberStore.getState().sum)
+        .isIdenticalTo(42)
+
+      .bool(numberStore.scope.recycle())
+        .isTrue()
+
+      .number(numberStore.getState().sum)
+        .isIdenticalTo(1)
+    ;
   });
 
   it.skip('listen the state changes', function() {
@@ -130,7 +111,7 @@ describe('State', function() {
 
   it('state is immutable', function() {
     let _storux = new Storux();
-    let numberStore = _storux.createStore(NumberStore, {initialState: {sum: 1}});
+    let numberStore = _storux.create(NumberStore, {initialState: {sum: 1}});
 
     test
       .undefined(numberStore.state)
@@ -155,15 +136,53 @@ describe('State', function() {
 
   });
 
-  it.skip('set a new state object', function() {
+  it('set a new state object with replaceState()', function() {
+    let _storux = new Storux();
+    let numberStore = _storux.create(NumberStore, {initialState: {sum: 1}});
 
+    test
+      .number(numberStore.getState().sum)
+        .isIdenticalTo(1)
+
+      .object(numberStore.getState())
+        .is({sum: 1})
+
+      .bool(numberStore.replaceState({foo: 'foo', bar: 'bar'}))
+        .isTrue()
+
+      .undefined(numberStore.getState().sum)
+
+      .object(numberStore.getState())
+        .hasNotProperty('sum')
+        .is({foo: 'foo', bar: 'bar'})
+    ;
   });
 
-  it.skip('merge some key/value in the state', function() {
+  it('merge some key/value in the state', function() {
+    let _storux = new Storux();
+    let numberStore = _storux.create(NumberStore, {initialState: {sum: 1}});
 
-  });
+    test
+      .number(numberStore.getState().sum)
+        .isIdenticalTo(1)
 
-  it.skip('action doesn\'t call replaceState() if the state is not changed', function() {
+      .object(numberStore.getState())
+        .is({sum: 1})
 
+      .bool(numberStore.setState({foo: 'foo', bar: 'bar'}))
+        .isTrue()
+
+      .number(numberStore.getState().sum)
+        .isIdenticalTo(1)
+
+      .object(numberStore.getState())
+        .is({sum: 1, foo: 'foo', bar: 'bar'})
+
+      .bool(numberStore.setState({sum: 42, foo: 'foo2', bar: 'bar', hello: 'Hello'}))
+        .isTrue()
+
+      .object(numberStore.getState())
+        .is({sum: 42, foo: 'foo2', bar: 'bar', hello: 'Hello'})
+    ;
   });
 });

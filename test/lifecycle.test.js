@@ -19,32 +19,32 @@ describe.skip('Lifecycle', function() {
   });
 
   describe('Storux lifecycle', function() {
-    it('createStore', function() {
+    it('create', function() {
 
     });
 
-    it('createStore.<store name>', function() {
+    it('create.<store name>', function() {
 
     });
 
-    it('beforeAction', function() {
+    it('before.<action name>', function() {
 
     });
 
-    it('afterAction', function() {
+    it('after.<action name>', function() {
 
     });
 
-    it('beforeActions', function() {
+    it('before', function() {
 
     });
 
-    it('afterActions', function() {
+    it('after', function() {
 
     });
   });
 
-  describe('Store lifecycle', function() {
+  describe('Scope lifecycle', function() {
     it('init (first init)', function() {
 
     });
@@ -62,14 +62,6 @@ describe.skip('Lifecycle', function() {
     });
 
     it('unlisten', function() {
-
-    });
-
-    it('beforeAction', function() {
-
-    });
-
-    it('afterAction', function() {
 
     });
   });

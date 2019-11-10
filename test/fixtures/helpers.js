@@ -19,6 +19,10 @@ let helpers = {
     test.fail(err.toString());
   },
 
+  handlePromise(done, promise) {
+    return promise.catch(helpers.catchError).finally(done).done();
+  },
+
   testHasChanged(expected) {
     return (hasChanged) => {
       test

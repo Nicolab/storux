@@ -12,7 +12,7 @@
 let {catchError, testHasChanged} = require('./fixtures/helpers');
 
 const test = require('unit.js');
-const {Storux, Store, Scope} = require('../src/');
+const {Storux, Store, Scope} = require('../dist/storux');
 const assert = test.assert;
 
 const onV1Spy = test.spy();
@@ -44,61 +44,72 @@ const resetAllSpies = () => {
 };
 
 describe('Flux', function() {
-
   class FluxStore extends Store {
     constructor(opt) {
       super(opt);
 
       this
         .scope
-        .generateActions(
+        .ensureActions(
           'v1',
           'v2'
         )
-        .mountActions()
-        .bindActions(this)
+        .mountActions({
+          delay1: this.delay1,
+          delay2: this.delay2,
+          delay3: this.delay3,
+          delay4: this.delay4,
+        })
       ;
+
+      this.delay1.hooks.push(this.onDelay1);
+      this.delay2.hooks.push(this.onDelay2);
+      this.delay3.hooks.push(this.onDelay3);
+      this.delay4.hooks.push(this.onDelay4);
+
+      this.v1.hooks.push(this.onV1);
+      this.v2.hooks.push(this.onV2);
     }
 
-    delay1(dispatch, arg) {
+    delay1(arg) {
       let id = 1;
 
       assert(arg === id, `position call ${id} (arg: ${arg}).`);
       delay1Spy();
-      dispatch(id).then(testHasChanged(true));
+      this.scope.dispatch(id).then(testHasChanged(true));
 
       return id;
     }
 
-    delay2(dispatch, arg) {
+    delay2(arg) {
       let id = 2;
 
       assert(arg === id, `position call ${id} (arg: ${arg}).`);
       delay2Spy();
 
-      setTimeout(() => dispatch(id).then(testHasChanged(true)), 0);
+      setTimeout(() => this.scope.dispatch(id).then(testHasChanged(true)), 0);
 
       return id;
     }
 
-    delay3(dispatch, arg) {
+    delay3(arg) {
       let id = 3;
 
       assert(arg === id, `position call ${id} (arg: ${arg}).`);
       delay3Spy();
 
-      setTimeout(() => dispatch(id).then(testHasChanged(true)), 5);
+      setTimeout(() => this.scope.dispatch(id).then(testHasChanged(true)), 5);
 
       return id;
     }
 
-    delay4(dispatch, arg) {
+    delay4(arg) {
       let id = 4;
 
       assert(arg === id, `position call ${id} (arg: ${arg}).`);
       delay4Spy();
 
-      setTimeout(() => dispatch(id).then(testHasChanged(true)), 10);
+      setTimeout(() => this.scope.dispatch(id).then(testHasChanged(true)), 10);
 
       return id;
     }
@@ -223,7 +234,7 @@ describe('Flux', function() {
     beforeEach(function() {
       resetAllSpies();
       storux = new Storux();
-      store = storux.createStore(FluxStore);
+      store = storux.create(FluxStore);
     });
 
     describe('Unidirectional flux', function () {
@@ -557,15 +568,6 @@ describe('Flux', function() {
                 delay3: true,
                 delay4: true,
                 v2: true
-              })
-
-            .object(store.getPrevState())
-              .is({
-                v1: true,
-                delay1: true,
-                delay2: true,
-                delay3: true,
-                delay4: true
               })
           ;
 

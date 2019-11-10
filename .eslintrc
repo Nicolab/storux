@@ -1,0 +1,22 @@
+{
+  "parser": "babel-eslint",
+  "extends": [
+    "common"
+  ],
+  "env": {
+    "node": true
+  },
+  "globals": {
+    "L": true
+  },
+  "rules": {
+    "comma-dangle": ["warn", {
+      "arrays": "always-multiline",
+      "objects": "always-multiline",
+      "imports": "only-multiline",
+      "exports": "only-multiline",
+      "functions": "ignore"
+    }],
+    "no-return-assign": 1
+  }
+}

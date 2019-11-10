@@ -10,7 +10,7 @@
 'use strict';
 
 const test = require('unit.js');
-const {Storux, Store} = require('../src/');
+const {Storux, Store} = require('../dist/storux');
 const storux = new Storux();
 const EmptyStore = require('./fixtures/EmptyStore');
 
@@ -30,7 +30,7 @@ class Instance2Store extends Store {}
 
 describe('Storux', function() {
   it('has an internal lifecycle', function() {
-    itHasInternalLifecycle(storux, storux.createStore(EmptyStore));
+    itHasInternalLifecycle(storux, storux.create(EmptyStore));
   });
 
   it('should have the Store class accessible via storux.Store and Storux.Store', function() {
@@ -45,7 +45,7 @@ describe('Storux', function() {
     let instanceStore, instance2Store;
 
     it('should be an instance of Store with a certain structure', function() {
-      instanceStore = storux.createStore(InstanceStore);
+      instanceStore = storux.create(InstanceStore);
 
       test
         .object(instanceStore)
@@ -66,7 +66,7 @@ describe('Storux', function() {
     });
 
     it('should create another store', function() {
-      instance2Store = storux.createStore(Instance2Store);
+      instance2Store = storux.create(Instance2Store);
 
       test
         .object(instance2Store)
@@ -104,7 +104,7 @@ describe('Storux', function() {
           .isFalse()
 
         .exception(function() {
-          storux.createStore(BadStore);
+          storux.create(BadStore);
         })
           .isInstanceOf(TypeError)
           .hasMessage(/`store` argument must be an instance of `Store`$/)
@@ -115,7 +115,7 @@ describe('Storux', function() {
     it('can\'t create a store if an identical store name is already created', function() {
       test
         .exception(function() {
-          storux.createStore(InstanceStore);
+          storux.create(InstanceStore);
         })
           .isInstanceOf(Error)
           .hasMessage(
@@ -126,8 +126,15 @@ describe('Storux', function() {
     });
 
     it('remove after creation the properties used only to create the store', function() {
+      class TestStore extends Store {
+      }
+
+      let testStore = storux.create(TestStore);
       let scopePropsToRemove = [
-        'generateActions',
+        '_createActionProxy',
+        '_generateActions',
+        'ensureActions',
+        'ensureSaveActions',
         'mountAction',
         'mountActions'
       ];
@@ -141,7 +148,7 @@ describe('Storux', function() {
       ;
 
       Storux.removeScopePropsAfterCreation.map((prop) => {
-        test.undefined(instanceStore.scope[prop]);
+        test.undefined(testStore.scope[prop]);
       });
     });
   });

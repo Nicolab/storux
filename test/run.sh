@@ -1,4 +1,4 @@
-npx mocha ./test/**/*.test.js --require babel-register \
+npx mocha ./test/**/*.test.js --require @babel/register \
 --recursive \
 --growl \
 --reporter spec \

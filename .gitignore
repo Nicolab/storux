@@ -8,4 +8,6 @@ public/
 Thumbs.db
 .idea/
 .tmp/
+.cache/
 package-lock.json
+yarn.lock

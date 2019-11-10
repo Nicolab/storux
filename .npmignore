@@ -19,3 +19,6 @@ Thumbs.db
 .tmp/
 .idea/
 package-lock.json
+yarn.lock
+.build.sh
+babel.config.js
