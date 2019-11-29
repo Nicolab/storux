@@ -139,3 +139,14 @@ myStore.setState({hello: 'world'});
 // remove the listener
 myStore.scope.unlisten(unlistenMyStore);
 ```
+
+## Summary
+
+You had the courage and patience to read the didactic series to learn Storux.
+Congratulations! 🎆
+
+You are now ready to easily manage and master the state of the great apps you'll build with Storux! 💪
+
+Throughout this series of articles we played with the decorators @action and @hook. You can explore the [decorators](decorators.md) chapter if you want to know more.
+
+Hoping that this didactic series and Storux in general improve your front-end developer life, as it improves ours.

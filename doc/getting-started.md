@@ -1,7 +1,5 @@
 # Getting started
 
-> ℹ️ TODO: This documentation is in progress.
-
 In general, this documentation assumes that you’re reading it in sequence from front to back. Later chapters build on concepts in earlier chapters, and earlier chapters might not delve into details on a topic; we typically revisit the topic in a later chapter.
 
 To take full advantage of the documentation and learn quickly Storux, it is recommended to test the examples as and when. Do not be a mere spectator!

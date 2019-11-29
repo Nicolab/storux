@@ -86,3 +86,9 @@ Depending on the case of interconnection. It may be more relevant to use the lif
 >
 > * [Actions](actions.md)
 > * [Lifecycle](lifecycle.md)
+
+## Summary
+
+The [store state](state.md), [actions](actions.md) and hooks system are the main mechanisms to assimilate in order to effectively manage the state of an application.
+
+At this point, you only have to [explore the lifecycle in the next chapter](lifecycle.md) to take full advantage of the benefits that Storux brings 🚀
