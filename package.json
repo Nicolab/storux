@@ -1,6 +1,6 @@
 {
   "name": "storux",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "Easy and powerful state store (Flux implementation) using actions, listeners and reducers (optional).",
   "keywords": [
     "flux",
