@@ -3,6 +3,7 @@ gulpfile.js
 gulpfile.babel.js
 .jshintrc
 .eslintrc
+.eslintignore
 .babelrc
 .gitignore
 test/
@@ -20,5 +21,6 @@ Thumbs.db
 .idea/
 package-lock.json
 yarn.lock
-.build.sh
+.build.js
 babel.config.js
+.cache/
