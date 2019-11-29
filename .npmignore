@@ -21,6 +21,6 @@ Thumbs.db
 .idea/
 package-lock.json
 yarn.lock
-.build.js
+build.js
 babel.config.js
 .cache/
