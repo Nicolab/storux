@@ -143,6 +143,8 @@ myStore.add(42).then((count) => {
   console.log('count: ', count);
 });
 
+console.log(myStore.getState());
+
 // It's more relevant to use the lifecycle, like "listen()" and "unlisten()".
 // Example for render the state in a UI component.
 ```
