@@ -8,10 +8,10 @@
  * or visit https://github.com/Nicolab/storux
  */
 
-const Scope = require('./Scope');
+import Scope from './Scope';
 
 // scope shortcut, define protected property in the store
-const dpsp = function(s, o, p, c) {
+const dpsp = function (s, o, p, c) {
   Object.defineProperty(o, c || p, {
     enumerable: false,
     configurable: false,
@@ -86,5 +86,4 @@ class Store {
 
 Store.Scope = Scope;
 
-module.exports = Store;
-module.exports.default = Store;
+export default Store;

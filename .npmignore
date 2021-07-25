@@ -10,6 +10,7 @@ test/
 #src/
 node_modules/
 local/
+.local/
 public/
 doc/
 examples/

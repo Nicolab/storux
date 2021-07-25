@@ -10,7 +10,7 @@
 'use strict';
 
 const test = require('unit.js');
-const {Storux, Store, action, hook} = require('../dist/storux');
+const {Storux, Store, action, hook} = require('storux');
 
 describe('Decorators', function() {
   describe('action()', function() {

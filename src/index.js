@@ -8,14 +8,15 @@
  * or visit https://github.com/Nicolab/storux
  */
 
-let Evemit = require('evemit');
-let Store = require('./Store');
-let Scope = require('./Scope');
+const Evemit = require('evemit');
 
-let {
+import Store from './Store'
+import Scope from './Scope'
+
+import {
   isStore,
   toId,
-} = require('./utils');
+} from './utils';
 
 class Storux {
   /**
@@ -59,8 +60,8 @@ class Storux {
 
     if (this.stores[storeName]) {
       throw new Error(
-        'The store `' + storeName + '` is already defined'
-        + ' in the `Storux` instance.'
+        'The store `' + storeName + '` is already defined' +
+        ' in the `Storux` instance.'
       );
     }
 
@@ -78,7 +79,7 @@ class Storux {
     // NOTE: `delete` is not appropriate because the value of the prototype
     // will be used instead. We do not want to delete at the prototype level
     // otherwise it would be reflected in all stores.
-    Storux.removeScopePropsAfterCreation.forEach(function(prop) {
+    Storux.removeScopePropsAfterCreation.forEach(function (prop) {
       store.scope[prop] = undefined;
     });
 
@@ -132,11 +133,11 @@ class Storux {
 Storux.Store = Store;
 
 /**
-* Check if `value` is an instance of `Store`.
-*
-* @param  {*}  value Value to check.
-* @return {bool}
-*/
+ * Check if `value` is an instance of `Store`.
+ *
+ * @param  {*}  value Value to check.
+ * @return {bool}
+ */
 Storux.isStore = isStore;
 
 Storux.removeScopePropsAfterCreation = [
@@ -148,7 +149,8 @@ Storux.removeScopePropsAfterCreation = [
   'mountActions',
 ];
 
-module.exports = {
+
+export default {
   Storux,
   Store,
   Scope,
@@ -161,8 +163,12 @@ module.exports = {
    * @return {function}
    */
   action(name) {
-    return function(target, key/* , desc */) {
-      target._mount[key] = {type: 'action', name, fn: target[key]};
+    return function (target, key /* , desc */ ) {
+      target._mount[key] = {
+        type: 'action',
+        name,
+        fn: target[key]
+      };
     };
   },
 
@@ -174,8 +180,12 @@ module.exports = {
    * @return {function}
    */
   hook(actionName) {
-    return function(target, key/* , desc */) {
-      target._mount[key] = {type: 'hook', key, actionName};
+    return function (target, key /* , desc */ ) {
+      target._mount[key] = {
+        type: 'hook',
+        key,
+        actionName
+      };
     };
   },
 };

@@ -5,12 +5,14 @@
 </div>
 
 Easy and powerful state store (Flux implementation) using actions, listeners and reducers (optional).
-Storux is a state store manager, to manage the state of an application (Website, App mobile, Web App, ...).
+Storux is a state store manager, to manage the state of an application (Website, App mobile, Web App, Node API, ...).
 
 You can manage the entire state of your project with a single store
 or separate the state into many specific stores (authStore, articleStore, commentStore, appStore, ...).
 
 Storux's philosophy is to be easy to use and productive. Powerful and makes life easier for the front developer.
+
+Browser and server, both are supported (great for <abbr title="Server Side Rendering">SSR</abbr>).
 
 Take advantage of the possibilities and __Enjoy!__
 
@@ -33,13 +35,16 @@ yarn add storux
 > 💡 __Recommended__
 > Take a quick tour in the doc: [Learn Storux](/doc).
 
+Storux supports _ESM_ (ES Module / `import`), _CJS_ (CommonJS / `require`) and _UMD_ (Universal Module Definition).
+So Storux can be imported from _ESM_ and _CJS_, ...
+
 Quick example:
 
 ```js
 // myStore.js
 
-let {Storux, action, hook} = require('storux');
-let storux = new Storux();
+import {Storux, action, hook} from 'storux';
+const storux = new Storux();
 
 class MyStore extends storux.Store {
   constructor(opt) {
@@ -142,6 +147,9 @@ myStore.fetch('db-id-xyz').then((data) => {
 myStore.add(42).then((count) => {
   console.log('count: ', count);
 });
+
+// Get the current state
+console.log(myStore.getState());
 
 // It's more relevant to use the lifecycle, like "listen()" and "unlisten()".
 // Example for render the state in a UI component.

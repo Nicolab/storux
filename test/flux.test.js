@@ -12,7 +12,7 @@
 let {catchError, testHasChanged} = require('./fixtures/helpers');
 
 const test = require('unit.js');
-const {Storux, Store, Scope} = require('../dist/storux');
+const {Storux, Store, Scope} = require('storux');
 const assert = test.assert;
 
 const onV1Spy = test.spy();

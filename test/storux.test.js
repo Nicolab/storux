@@ -10,7 +10,7 @@
 'use strict';
 
 const test = require('unit.js');
-const {Storux, Store} = require('../dist/storux');
+const {Storux, Store} = require('storux');
 const storux = new Storux();
 const EmptyStore = require('./fixtures/EmptyStore');
 
