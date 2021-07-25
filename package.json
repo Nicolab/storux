@@ -1,6 +1,6 @@
 {
   "name": "storux",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Easy and powerful state store (Flux implementation) using actions, listeners and reducers (optional).",
   "keywords": [
     "flux",
@@ -36,9 +36,6 @@
     "unit.js": ">= 2.0.0 < 3.0.0",
     "vite": "^2.4.3"
   },
-  "files": [
-    "./dist"
-  ],
   "main": "./dist/storux.umd.js",
   "module": "./dist/storux.es.js",
   "exports": {
