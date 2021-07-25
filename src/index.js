@@ -39,9 +39,9 @@ class Storux {
    * Create a new `Store` instance.
    *
    * @param {Store}    StoruxStore A class (will be instancied) inherited from `Store`.
-   * @param {object}   opt Options.
-   * @param {object}   [opt.storeOpt] Specific store options (user land).
+   * @param {object}   opt Specific store options (user land).
    * @param {object}   [opt.initialState] Initial state.
+   * @param  {object}  [opt.displayName]  Custom store name (returned by the `displayName` method).
    * @return {Store} The new `Store` instance.
    */
   create(StoruxStore, opt = {}) {
