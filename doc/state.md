@@ -96,6 +96,8 @@ To improve productivity, the most used methods can be accessed directly as store
 
 When a store is created, an initial state may be defined in 2 ways.
 
+> ✨ `InitialState` can also be used for the server-side rendering ([SSR](ssr.md)).
+
 1 - Inline, on the fly:
 
 ```js

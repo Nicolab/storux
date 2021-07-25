@@ -21,4 +21,6 @@ Take advantage of the possibilities and __Enjoy!__
 * [Actions](/doc/actions.md)
 * [Hooks](/doc/hooks.md)
 * [Lifecycle](/doc/lifecycle.md)
+* [State](/doc/state.md)
 * [Decorators](/doc/decorators.md)
+* [SSR (Server-Side Rendering)](/doc/ssr.md)
