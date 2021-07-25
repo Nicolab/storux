@@ -6,8 +6,8 @@ The use of decorators is optional, it is just an awesome syntactic sugar 🦄
 ```js
 // myStore.js
 
-let {Storux, Store, action, hook} = require('storux');
-let storux = new Storux();
+import {Storux, Store, action, hook} from 'storux';
+import storux from './path/to/your/storuxInstance';
 
 class MyStore extends Store {
   constructor(opt) {

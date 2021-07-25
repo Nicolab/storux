@@ -20,13 +20,20 @@ yarn add storux
 
 ## Usage
 
+Storux supports _ESM_ (ES Module / `import`), _CJS_ (CommonJS / `require`) and _UMD_ (Universal Module Definition).
+So Storux can be imported from _ESM_ and _CJS_, ...
+
 ### Create the Storux instance
 
 The `Storux` instance is like a container of stores.
 
 ```js
-const {Storux} = require('storux');
+import {Storux} from 'storux';
+// or const {Storux} = require('storux');
+
 const storux = new Storux();
+
+export default storux;
 ```
 
 All the stores created with `storux` are accessible with `storux.stores`.
@@ -34,7 +41,8 @@ All the stores created with `storux` are accessible with `storux.stores`.
 Example:
 
 ```js
-const {Store} = require('storux');
+import {Store} from 'storux';
+// or const {Store} = require('storux');
 
 class AppStore extends Store {}
 class AuthStore extends Store {}

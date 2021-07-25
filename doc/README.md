@@ -1,8 +1,11 @@
 # Storux
 
-Storux is a state store manager, to manage the state of an application (Website, App mobile, Web App, ...).
+Storux is a state store manager, to manage the state of an application (Website, App mobile, Web App, <abbr title="Server Side Rendering">SSR</abbr>, ...).
 
 You can manage the entire state of your project with a single store or separate the state into many specific stores (authStore, articleStore, commentStore, appStore, ...).
+
+Storux supports _ESM_ (ES Module / `import`), _CJS_ (CommonJS / `require`) and _UMD_ (Universal Module Definition).
+So Storux can be imported from _ESM_ and _CJS_, ...
 
 Storux's philosophy is to be easy to use and productive.
 

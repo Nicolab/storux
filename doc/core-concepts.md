@@ -2,8 +2,6 @@
 
 > ℹ️ This documentation is in progress.
 
-
-
 ## Store and Scope
 
 ℹ️ __Good to know__

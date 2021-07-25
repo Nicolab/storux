@@ -23,8 +23,8 @@ Short example with 3 actions:
 ```js
 // myStore.js
 
-let {Storux, Store} = require('storux');
-let storux = require('./path/to/storuxInstance');
+import {Storux, Store} from 'storux';
+import storux from './path/to/your/storuxInstance';
 
 class MyStore extends Store {
   constructor(opt) {
@@ -82,6 +82,8 @@ class MyStore extends Store {
       .catch((err) => this._save({user: null, err}));
   }
 }
+
+export default storux.create(MyStore);
 ```
 
 ## Create actions with a decorator
@@ -91,8 +93,8 @@ The same with the decorator `@action`.
 ```js
 // myStore.js
 
-let {Storux, Store, action} = require('storux');
-let storux = require('./path/to/storuxInstance');
+import {Storux, Store, action} from 'storux';
+import storux from './path/to/your/storuxInstance';
 
 class MyStore extends Store {
   constructor(opt) {
@@ -146,6 +148,8 @@ class MyStore extends Store {
       .catch((err) => this._save({user: null, err}));
   }
 }
+
+export default storux.create(MyStore);
 ```
 
 ## CRUD with actions
