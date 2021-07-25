@@ -1,6 +1,6 @@
 {
   "name": "storux",
-  "version": "0.10.2",
+  "version": "0.11.0",
   "description": "Easy and powerful state store (Flux implementation) using actions, listeners and reducers (optional).",
   "keywords": [
     "flux",
@@ -8,7 +8,9 @@
     "state",
     "store",
     "action",
-    "react"
+    "react",
+    "marko",
+    "marko.js"
   ],
   "homepage": "https://github.com/Nicolab/storux",
   "author": {
