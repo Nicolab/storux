@@ -149,43 +149,38 @@ Storux.removeScopePropsAfterCreation = [
   'mountActions',
 ];
 
-
-export default {
-  Storux,
-  Store,
-  Scope,
-
-  /**
-   * Create an action.
-   *
-   * @decorator
-   * @param {string} name Action name to create.
-   * @return {function}
-   */
-  action(name) {
-    return function (target, key /* , desc */ ) {
-      target._mount[key] = {
-        type: 'action',
-        name,
-        fn: target[key]
-      };
+/**
+ * Create an action.
+ *
+ * @decorator
+ * @param {string} name Action name to create.
+ * @return {function}
+ */
+function action(name) {
+  return function (target, key /* , desc */ ) {
+    target._mount[key] = {
+      type: 'action',
+      name,
+      fn: target[key]
     };
-  },
+  }
+}
 
-  /**
-   * Create a hook for `actionName`
-   *
-   * @decorator
-   * @param {string} actionName Action name to hook.
-   * @return {function}
-   */
-  hook(actionName) {
-    return function (target, key /* , desc */ ) {
-      target._mount[key] = {
-        type: 'hook',
-        key,
-        actionName
-      };
+/**
+ * Create a hook for `actionName`
+ *
+ * @decorator
+ * @param {string} actionName Action name to hook.
+ * @return {function}
+ */
+function hook(actionName) {
+  return function (target, key /* , desc */ ) {
+    target._mount[key] = {
+      type: 'hook',
+      key,
+      actionName
     };
-  },
-};
+  };
+}
+
+export {Storux, Store, Scope, action, hook};
