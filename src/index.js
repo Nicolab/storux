@@ -8,8 +8,7 @@
  * or visit https://github.com/Nicolab/storux
  */
 
-const Evemit = require('evemit');
-
+import Evemit from 'evemit';
 import Store from './Store'
 import Scope from './Scope'
 

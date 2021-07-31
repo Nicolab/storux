@@ -7,7 +7,8 @@
  * distributed with this source code
  * or visit https://github.com/Nicolab/storux
  */
-const Evemit = require('evemit');
+
+import Evemit from 'evemit';
 import {
   clone,
   isEquival,
