@@ -1,4 +1,4 @@
-/*! storux v0.11.3 | MIT (c) 2022 Nicolas Tallefourtane - https://github.com/Nicolab/storux */
+/*! storux v0.11.4 | MIT (c) 2022 Nicolas Tallefourtane - https://github.com/Nicolab/storux */
 var __defProp=Object.defineProperty,__getOwnPropSymbols=Object.getOwnPropertySymbols,__hasOwnProp=Object.prototype.hasOwnProperty,__propIsEnum=Object.prototype.propertyIsEnumerable,__defNormalProp=(t,e,i)=>e in t?__defProp(t,e,{enumerable:!0,configurable:!0,writable:!0,value:i}):t[e]=i,__spreadValues=(t,e)=>{for(var i in e||(e={}))__hasOwnProp.call(e,i)&&__defNormalProp(t,i,e[i]);if(__getOwnPropSymbols)for(var i of __getOwnPropSymbols(e))__propIsEnum.call(e,i)&&__defNormalProp(t,i,e[i]);return t};!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeof define&&define.amd?define(["exports"],e):e((t="undefined"!=typeof globalThis?globalThis:t||self).storux={})}(this,(function(t){"use strict";var e,i={exports:{}};
 /**
    * @name Evemit

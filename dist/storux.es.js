@@ -1,4 +1,4 @@
-/*! storux v0.11.3 | MIT (c) 2022 Nicolas Tallefourtane - https://github.com/Nicolab/storux */
+/*! storux v0.11.4 | MIT (c) 2022 Nicolas Tallefourtane - https://github.com/Nicolab/storux */
 var t,e=Object.defineProperty,i=Object.getOwnPropertySymbols,s=Object.prototype.hasOwnProperty,r=Object.prototype.propertyIsEnumerable,n=(t,i,s)=>i in t?e(t,i,{enumerable:!0,configurable:!0,writable:!0,value:s}):t[i]=s,o=(t,e)=>{for(var o in e||(e={}))s.call(e,o)&&n(t,o,e[o]);if(i)for(var o of i(e))r.call(e,o)&&n(t,o,e[o]);return t},c={exports:{}};
 /**
  * @name Evemit
