@@ -324,7 +324,7 @@ class Scope {
               // eslint-disable-next-line promise/param-names
               return new Promise(function (ok) {
                 // dispatch on the next event loop
-                setImmediate(function () {
+                setTimeout(function () {
                   ok(scope._dispatcher({
                     resolve,
                     action,
@@ -332,7 +332,7 @@ class Scope {
                     obj,
                     fnResult
                   }));
-                });
+                }, 0);
               });
             };
             // add the current action ref when the action is called
@@ -412,7 +412,7 @@ class Scope {
       this.store[fnName] = undefined;
     }
     action.id = this.displayName + '.' + action.displayName;
-    action.defer = (...args) => setImmediate(action.apply(this.store, args));
+    action.defer = (...args) => setTimeout(action.apply(this.store, args), 0);
     action.hooks = [];
     // mounted!
     this.store[actionName] = action;
